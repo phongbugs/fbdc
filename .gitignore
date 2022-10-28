@@ -1,0 +1,26 @@
+# dependencies
+node_modules
+
+# production
+build
+
+# misc
+.DS_Store
+
+npm-debug.log
+yarn-error.log
+yarn.lock
+.yarnclean
+.vscode
+public/WLs.json
+package-lock.json
+
+public/js/gridWL.js
+
+config_/
+
+models_/
+
+models/index_sequelize_cli.js
+
+public/extjs/*

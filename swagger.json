@@ -1,0 +1,430 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "THE CLINIC API",
+    "description": "THE CLINIC API demo server",
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:9999",
+      "description": "Development server"
+    },
+    {
+      "url": "https://clinicx-api.herokuapp.com",
+      "description": "Test server"
+    },
+    {
+      "url": "https://bieudo.xyz",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "THE CLINIC API",
+      "description": "API for THE CLINIC"
+    }
+  ],
+  "paths": {
+    "/user/login": {
+      "post": {
+        "tags": [
+          "THE CLINIC API"
+        ],
+        "summary": "Login to management site",
+        "requestBody": {
+          "description": "Only use password to login",
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "required": [
+                  "password"
+                ],
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Login response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/change-pwd": {
+      "put": {
+        "tags": [
+          "THE CLINIC API"
+        ],
+        "summary": "Change password",
+        "description": "Change password",
+        "requestBody": {
+          "description": "the old password and new password",
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "required": [
+                  "newPassword",
+                  "password"
+                ],
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Change password response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePasswordResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/create": {
+      "post": {
+        "tags": [
+          "THE CLINIC API"
+        ],
+        "summary": "Create a new customer",
+        "requestBody": {
+          "description": "Customer object that needs to be added to the db",
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CustomerCreation"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Change password response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerUpdation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/update": {
+      "put": {
+        "tags": [
+          "THE CLINIC API"
+        ],
+        "summary": "Update a customer",
+        "requestBody": {
+          "description": "Customer object that needs to be update to the db",
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CustomerUpdation"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Change password response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerCRUDResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/list": {
+      "get": {
+        "tags": [
+          "THE CLINIC API"
+        ],
+        "summary": "Get all customers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "page number",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "start number",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "limit number(quantity record of one page)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of customer data"
+          }
+        }
+      }
+    },
+    "/customer/delete/{id}": {
+      "delete": {
+        "tags": [
+          "THE CLINIC API"
+        ],
+        "summary": "Delete customer by id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "customer id",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete customer successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerCRUDResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LoginResponse": {
+        "required": [
+          "success"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "authToken": {
+            "type": "object",
+            "description": "a encrypted string by RSA algorithm",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthToken"
+              }
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ChangePasswordResponse": {
+        "required": [
+          "success"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthToken": {
+        "required": [
+          "expiredDate"
+        ],
+        "properties": {
+          "expiredDate": {
+            "type": "number"
+          }
+        }
+      },
+      "CustomerUpdation": {
+        "required": [
+          "address",
+          "age",
+          "annual_examination",
+          "career",
+          "disease_type",
+          "gender",
+          "id",
+          "name",
+          "phone",
+          "re_examination_date"
+        ],
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "age": {
+            "type": "number"
+          },
+          "gender": {
+            "maxLength": 1,
+            "minLength": 1,
+            "type": "number"
+          },
+          "career": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "disease_type": {
+            "type": "string"
+          },
+          "re_examination_date": {
+            "type": "string"
+          },
+          "annual_examination": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomerCreation": {
+        "required": [
+          "address",
+          "age",
+          "annual_examination",
+          "career",
+          "disease_type",
+          "gender",
+          "name",
+          "phone",
+          "re_examination_date"
+        ],
+        "properties": {
+          "phone": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "age": {
+            "type": "number"
+          },
+          "gender": {
+            "maxLength": 1,
+            "minLength": 1,
+            "type": "number"
+          },
+          "career": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "disease_type": {
+            "type": "string"
+          },
+          "re_examination_date": {
+            "type": "string"
+          },
+          "annual_examination": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomerCRUDResponse": {
+        "required": [
+          "success"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

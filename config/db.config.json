@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "root",
+    "password": "Bi;^Mpvr!0yc",
+    "database": "fbdc",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "bsngoctu_uan",
+    "password": "Bi;^Mpvr!0yc",
+    "database": "bsngoctu_pk",
+    "host": "103.130.216.96",
+    "dialect": "mysql"
+  }
+}

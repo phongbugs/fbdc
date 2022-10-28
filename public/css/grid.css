@@ -1,0 +1,61 @@
+.success .x-grid-cell {
+  background: #ffe2e2;
+  color: #900;
+  animation: errorOK 3s;
+  animation-fill-mode: forwards;
+  animation-direction: alternate;
+  -webkit-animation: errorOK 3s;
+  -webkit-animation-fill-mode: forwards;
+  -webkit-animation-direction: alternate;
+}
+@keyframes errorOK {
+  from {
+    background: #157fcc;
+    color: blue;
+  }
+  to {
+    background: #ffffff;
+    color: black;
+  }
+}
+@-webkit-keyframes errorOK {
+  from {
+    background: #157fcc;
+    color: blue;
+  }
+  to {
+    background: #ffffff;
+    color: black;
+  }
+}
+/* Form */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 4px #ddd solid;
+  border-top: 4px #2e93e6 solid;
+  border-radius: 50%;
+  animation: sp-anime 0.8s infinite linear;
+}
+
+@keyframes sp-anime {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.center {
+  position: absolute;
+  left: 50%;
+  top: 10%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+
+.update {
+  background: url(https://icons.iconarchive.com/icons/custom-icon-design/pretty-office-9/16/edit-file-icon.png)
+    no-repeat center;
+}
+.add {
+  background: url(https://icons.iconarchive.com/icons/icojam/blue-bits/16/user-add-icon.png)
+    no-repeat center;
+}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>FBDC Management</title>
+    <link rel="stylesheet" href="extjs/7.0/classic/theme-neptune/resources/theme-neptune-all.css" />
+    <link rel="stylesheet" href="extjs/7.0/packages/ux/classic/neptune/resources/ux-all.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css" integrity="sha512-q3eWabyZPc1XTCmF+8/LuE1ozpg5xxn7iO89yfSOd5/oKvyqLngoNGsx8jq92Y8eXJ/IRxQbEC+FGSYxtk2oiw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="extjs/7.0/ext-all.js"></script>
+    <link rel="shortcut icon" href="https://icons.iconarchive.com/icons/icons8/ios7/16/Cinema-Documentary-icon.png">
+    <style>
+        .users {
+            background: url(https://icons.iconarchive.com/icons/custom-icon-design/pretty-office-8/16/Users-icon.png) no-repeat center
+        }
+        .menu{
+            background: url(https://icons.iconarchive.com/icons/icons8/windows-8/16/Very-Basic-Menu-icon.png) no-repeat center
+            
+        }
+    </style>
+     <script src="js/jsencrypt.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+     <link rel="stylesheet" href="css/grid.css" />
+    <link rel="stylesheet" href="css/form.css" />
+</head>
+
+<body>
+    <div id="app">
+        <div id="center" class="center">
+            <div id="loading" class="spinner"></div>
+        </div>
+    </div>
+    <script>
+        function isLocalhost() {
+            return window.location.host.indexOf('localhost') > -1 || window.location.host.indexOf('192.168.1.47') > -1
+        }
+        let hostAPI = isLocalhost() ? 'http://localhost:7777' : 'https://' + window.location.host,
+            tokenPrivateKey = '-----BEGIN RSA PRIVATE KEY-----MIICXAIBAAKBgQCrRxLdvg03/1KX9xJAW0USP3pSqJTSkwEY3aQ2tphPkKmGAZxVPUgiNjyGxhplR6Q+YKKybmveL/TbhKEWCXRXcRkZVEQo3vG2SFozWcgJIFaCw7g6aU73hG3kYxb+uJsUPR7AUls/YECKeouCKEYgg+aqmJm0zgT+p3vBd/lNzwIDAQABAoGBAIQ04VguKg/uUjeg7AKnMMKsIuSI4g9Ej5U9CFN/UEQiOuiId77IBdT6nm+9nIRO73WCrDMkzrh7tfp3/st+0sCklR6IINTFH1+p9552qSDru6WpbIPsEK70yD6Cb8gfEC8PGQh1LRgzpLFMCGVcixuTRfbL3gXc2ZUmh+xmYMXBAkEA27ubu0MmMko3K/n02EU+Cij/fmlcnqkYblkDQxKJVQ3pmgVCmD4wfm2byT2TwbTPs+Rqp3nVnlR/RNJsDJESYQJBAMeMFTd6wOhB1d93HFxWgAYL/AA3B3znc5TxxxW7mn5v0c/uTR52UefoRfBDxxhqItCeTs+NsB5PIw3r6T95ri8CQHlr/4+IeLf7iOdVNba49KJ6q0y4fkTynhyENag/uwH0MS06UOV+ICANA7Q9wcOd3dTDmSg4zBG1Ear/OFPtaqECQC1gboayNGHcbr0lQd7BkNVPLlwCJ4LAwyjQnjwT8DrmRKjrAMB3mYKJ8DWFxCWKJSaZiURrbOxHhKoqxly31+MCQGDwutUtAE6q8E1hZ/+/tqr4fyG5vFW4EYXbeXcYPM6h+PoSBFSPaG/EAGfNmxPiFRll7ODBoHMHei/XXPlAHKg=-----END RSA PRIVATE KEY-----',
+            log = console.log,
+            loadScript = (pathScript) => {
+                const script = document.createElement('script')
+                script.src = pathScript
+                document.getElementsByTagName('body')[0].appendChild(script)
+            },
+            authenticate = (callback) => {
+                Ext.Ajax.request({
+                	withCredentials: true,
+                	url: hostAPI + '/user/login/status',
+                	success: function (response) {
+                		let success = JSON.parse(response.responseText).success
+                		if (success)
+                			callback(true)
+                		else
+                			callback(false)
+                	},
+                	failure: function (response) {
+                		Ext.Msg.alert(
+                			'Error',
+                			'/login/status'
+                		);
+                		log(response)
+                		callback(false)
+                	},
+                });
+                //callback(true)
+            }
+        let currentVersion = () => new Date().getTime();
+        window.onload = () => {
+            authenticate((isAuthenticated) => {
+                if (isAuthenticated)
+                    loadScript('js/index.js?v=' + currentVersion())
+                else
+                    loadScript('js/loginForm.js?v=' + currentVersion())
+                Ext.tip.QuickTipManager.init();
+            })
+        }
+    </script>
+</body>
+
+</html>
