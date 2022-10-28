@@ -1,6 +1,6 @@
 const getCmp = function (query) {
-    return Ext.ComponentQuery.query(query)[0];
-  };
+  return Ext.ComponentQuery.query(query)[0];
+};
 Ext.define('KitchenSink.view.layout.Border', {
   extend: 'Ext.panel.Panel',
   xtype: 'layout-border',
@@ -48,7 +48,7 @@ Ext.define('KitchenSink.view.layout.Border', {
       xtype: 'panel',
       collapsible: false,
       title: 'Menu',
-      iconCls: 'menu',
+      icon: 'https://icons.iconarchive.com/icons/icons8/windows-8/16/Very-Basic-Menu-icon.png',
       region: 'west',
       width: 200,
       height: 500,
@@ -66,12 +66,12 @@ Ext.define('KitchenSink.view.layout.Border', {
               var tab = getCmp('#mainContent').add({
                 xtype: 'component',
                 title: 'User',
-                iconCls: 'users',
+                icon: 'https://icons.iconarchive.com/icons/custom-icon-design/pretty-office-8/16/Users-icon.png',
                 closable: true,
                 autoEl: {
                   tag: 'iframe',
                   src: '/customer.html',
-                  style:'border:none'
+                  style: 'border:none',
                 },
               });
               getCmp('#mainContent').setActiveTab(tab);
@@ -79,6 +79,7 @@ Ext.define('KitchenSink.view.layout.Border', {
           },
           {
             text: 'Subscription History',
+            icon: 'https://icons.iconarchive.com/icons/mcdo-design/smooth-leopard/16/History-Folder-Willow-icon.png',
           },
           {
             icon: 'https://icons.iconarchive.com/icons/saki/nuoveXT-2/16/Apps-session-logout-icon.png',
@@ -91,16 +92,15 @@ Ext.define('KitchenSink.view.layout.Border', {
       xtype: 'tabpanel',
       title: 'Main Content',
       collapsible: false,
-      header:false,
+      header: false,
       region: 'center',
-      html: '<div id="mainContent"></div>',
       itemId: 'mainContent',
       bodyPadding: 0,
-      bodyBorder:'none',
-      border:0
+      bodyBorder: 'none',
+      border: 0,
     },
   ],
-  renderTo:'app',
+  renderTo: 'app',
 });
 Ext.onReady(function () {
   Ext.create('KitchenSink.view.layout.Border', {

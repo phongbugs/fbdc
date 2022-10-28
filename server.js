@@ -5,14 +5,14 @@
  */
 
 var app = require('./app');
-var debug = require('debug')('clinicx-api:server');
+var debug = require('debug')('fbdc:server');
 var http = require('http');
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '7777');
+var port = normalizePort(process.env.PORT || '6868');
 app.set('port', port);
 
 /**

@@ -1,5 +1,5 @@
 {
-  "name": "clinicx-api",
+  "name": "fbdc",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -16,7 +16,6 @@
     "md5": "^2.3.0",
     "morgan": "^1.9.1",
     "mysql2": "^2.2.5",
-    "node-jsencrypt": "^1.0.0",
     "sequelize": "^6.25.3",
     "swagger-ui-express": "^4.5.0"
   },

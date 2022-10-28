@@ -72,7 +72,7 @@ Ext.onReady(() => {
                       document.getElementById('app').innerHTML = '';
                       me.setIconCls('login-btn');
                       me.enable();
-                      loadScript('js/customerGrid.js');
+                      loadScript('js/index.js');
                     }
                   },
                   failure: function (form, action) {
