@@ -44,22 +44,23 @@ let Groups,
     find: { name: 'find', label: 'Tìm kiếm', icon: '' },
     logout: { name: 'logout', label: 'Đăng xuất', icon: '' },
   },
-  customerFormAction = actions.create;
+  customerFormAction = actions.create,
+  getCmp = function (query) {
+    return Ext.ComponentQuery.query(query)[0];
+  };
+
 Ext.onReady(function () {
   Ext.define('Customer', {
     extend: 'Ext.data.Model',
     fields: [
       'id',
-      'id_ref',
+      'fullName',
+      'email',
       'phone',
-      'name',
-      'age',
       'gender',
-      'career',
+      'birthday',
       'address',
-      'disease_type',
-      're_examination_date',
-      'annual_examination',
+      'career',
       'note',
     ],
   });
@@ -70,6 +71,8 @@ Ext.onReady(function () {
       url: hostAPI + '/customer/list',
       reader: {
         type: 'json',
+        root: 'records',
+        totalProperty: 'totalCount',
       },
     },
     listeners: {
@@ -78,7 +81,8 @@ Ext.onReady(function () {
         Groups = storeCustomer.getGroups();
       },
     },
-    autoLoad: false,
+    autoLoad: true,
+    //autoLoad: { start: 0, limit: 25 },
   });
 
   let customerGrid = Ext.create('Ext.grid.Panel', {
@@ -88,25 +92,34 @@ Ext.onReady(function () {
     width: Ext.getBody().getViewSize().width,
     height: Ext.getBody().getViewSize().height,
     icon: 'https://icons.iconarchive.com/icons/google/noto-emoji-travel-places/16/42491-hospital-icon.png',
-    //title: 'Quản lý bệnh nhân',
-    header:false,
+    header: false,
     plugins: ['gridfilters'],
-    //selModel: 'cellmodel',
+    multiSelect: true,
+    selModel: Ext.create('Ext.selection.CheckboxModel', {
+      mode: 'SIMPLE',
+      listeners: {
+        selectionchange: function (model, selections) {
+          var btnDelete = getCmp('#btnDelete');
+          if (selections.length > 0) btnDelete.setDisabled(false);
+          else btnDelete.setDisabled(true);
+        },
+      },
+    }),
     features: [featureGrouping],
     listeners: {
       viewready: (_) => {
         loadScript('js/customerForm.js');
       },
-      cellclick(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
-        if (cellIndex !== 11) {
+      celldblclick(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
+        if (cellIndex > 0 && cellIndex <= 5) {
           customerGrid.setDisabled(true);
           customerFormAction = actions.update;
           customerForm.show();
           //fix binding betwwen datefield & datecolumn
-          record.set(
-            're_examination_date',
-            record.get('re_examination_date').split('/').reverse().join('-')
-          );
+          // record.set(
+          //   'expiredDate',
+          //   record.get('expiredDate').split('/').reverse().join('-')
+          // );
           customerForm.loadRecord(record);
           customerForm.query('#btnResetCustomerForm')[0].setDisabled(true);
           submitButton = customerForm.query('#btnSubmitCustomerForm')[0];
@@ -116,6 +129,38 @@ Ext.onReady(function () {
       },
     },
     tbar: [
+      {
+        xtype: 'button',
+        itemId: 'btnDelete',
+        icon: actions.delete.icon,
+        disabled: true,
+        tooltip: 'Xóa người dùng',
+        handler: () => {
+          var seletedRecords = customerGrid
+            .getSelectionModel()
+            .getSelected()
+            .getRange();
+          Ext.Msg.confirm(
+            'Xác nhận',
+            'Bạn muốn xóa ' + seletedRecords.length + ' người dùng này ?',
+            (buttonId) => {
+              if (buttonId === 'yes') {
+                var ids = seletedRecords.map((record) => record.data.id);
+                Ext.Ajax.request({
+                  method: 'DELETE',
+                  url: hostAPI + '/customer/delete/' + ids.toString(),
+                  success: function (response) {
+                    storeCustomer.remove(seletedRecords);
+                  },
+                  failure: function (response) {
+                    alert(JSON.stringify(response));
+                  },
+                });
+              }
+            }
+          );
+        },
+      },
       {
         xtype: 'button',
         id: 'btnRefresh',
@@ -147,7 +192,7 @@ Ext.onReady(function () {
           },
         },
       },
-      
+
       {
         xtype: 'combo',
         width: 120,
@@ -155,8 +200,10 @@ Ext.onReady(function () {
           fields: ['id', 'name'],
           data: [
             ['default', 'Phân nhóm'],
-            ['address', 'Giới tính'],
-            ['disease_type', 'Ngày hết hạn'],
+            ['address', 'Địa chỉ'],
+            ['gender', 'Giới tính'],
+            ['career', 'Nghề nghiệp'],
+            ['birthday', 'Tuổi'],
           ],
         }),
         queryMode: 'local',
@@ -208,19 +255,24 @@ Ext.onReady(function () {
                   filterFn: function (item) {
                     return (
                       item
-                        .get('name')
+                        .get('fullName')
+                        .toLowerCase()
+                        .indexOf(searchValue.toLowerCase()) > -1 ||
+                      item
+                        .get('email')
                         .toLowerCase()
                         .indexOf(searchValue.toLowerCase()) > -1 ||
                       item
                         .get('phone')
                         .toLowerCase()
-                        .indexOf(searchValue.toLowerCase()) > -1 ||
-                      item
-                        .get('re_examination_date')
-                        .split('-')
-                        .reverse()
-                        .join('/')
-                        .indexOf(searchValue) > -1
+                        .indexOf(searchValue.toLowerCase()) > -1
+                      //   ||
+                      // item
+                      //   .get('expiredDate')
+                      //   .split('-')
+                      //   .reverse()
+                      //   .join('/')
+                      //   .indexOf(searchValue) > -1
                     );
                   },
                 }),
@@ -231,6 +283,20 @@ Ext.onReady(function () {
         },
       },
     ],
+    bbar: {
+      xtype: 'pagingtoolbar',
+      displayInfo: true,
+      store: storeCustomer,
+      displayMsg: 'Dữ liệu từ {0} - {1} of {2}',
+      emptyMsg: 'Không có dữ liệu',
+      plugins: [
+        {
+          ptype: 'pagingtoolbarresizer',
+          options: [25, 50, 100, 125, 150, 200, 400, 500, 700, 1000],
+          displayMsg: 'Số lượng dòng trên một trang',
+        },
+      ],
+    },
     columns: [
       new Ext.grid.RowNumberer({ dataIndex: 'no', text: 'STT', width: 60 }),
       {
@@ -242,11 +308,11 @@ Ext.onReady(function () {
       {
         text: 'Tên người dùng',
         width: 180,
-        dataIndex: 'name',
+        dataIndex: 'fullName',
       },
       {
         text: 'Email',
-        width: 120,
+        width: 180,
         dataIndex: 'email',
       },
       {
@@ -255,72 +321,48 @@ Ext.onReady(function () {
         dataIndex: 'phone',
       },
       {
-        //xtype: 'datecolumn',
-        //format: 'd/m/Y',
         text: 'Ngày hết hạn',
         width: 120,
-        dataIndex: 're_examination_date',
-        renderer: (v) => v.split('-').reverse().join('/'),
+        dataIndex: 'expiredDate',
+        //renderer: (v) => v.split('-').reverse().join('/'),
       },
-      {
-        text: 'Địa chỉ',
-        width: 120,
-        dataIndex: 'address',
-      },
-      {
-        text: 'Năm sinh',
-        width: 100,
-        dataIndex: 'birthday',
-      },
-      {
-        text: 'Giới tính',
-        width: 80,
-        dataIndex: 'gender',
-        renderer: (v) => (v === 0 ? 'Nữ' : 'Nam'),
-      },
-      {
-        text: 'Nghề nghiệp',
-        width: 100,
-        dataIndex: 'career',
-      },
-      
-      {
-        text: 'Ghi chú',
-        width: 150,
-        dataIndex: 'note',
-      },
+      // {
+      //   text: 'Địa chỉ',
+      //   width: 120,
+      //   dataIndex: 'address',
+      // },
+      // {
+      //   text: 'Năm sinh',
+      //   width: 100,
+      //   dataIndex: 'birthday',
+      // },
+      // {
+      //   text: 'Giới tính',
+      //   width: 80,
+      //   dataIndex: 'gender',
+      //   renderer: (v) => (v === 0 ? 'Nữ' : 'Nam'),
+      // },
+      // {
+      //   text: 'Nghề nghiệp',
+      //   width: 100,
+      //   dataIndex: 'career',
+      // },
+
+      // {
+      //   text: 'Ghi chú',
+      //   width: 150,
+      //   dataIndex: 'note',
+      // },
       {
         xtype: 'actioncolumn',
-        width: 30,
-        tooltip: 'Xóa người dùng',
-        text: 'Xóa',
+        width: 40,
+        tooltip: 'Đăng Ký/Gia Hạn',
+        text: 'ĐK',
+        align: 'center',
         items: [
           {
-            icon: actions.delete.icon,
-            handler: function (grid, rowIndex, colIndex, item, e, record) {
-              Ext.Msg.confirm(
-                'Xác nhận',
-                'Bạn muốn xóa người dùng này ?',
-                (buttonId) => {
-                  if (buttonId === 'yes') {
-                    let store = grid.getStore();
-                    var recordIndex = store.indexOf(record);
-                    var id = grid.getStore().getAt(recordIndex).get('id');
-                    Ext.Ajax.request({
-                      method: 'DELETE',
-                      url: hostAPI + '/customer/delete/' + id,
-                      success: function (response) {
-                        //log(response);
-                        store.removeAt(recordIndex);
-                      },
-                      failure: function (response) {
-                        alert(JSON.stringify(response));
-                      },
-                    });
-                  }
-                }
-              );
-            },
+            icon: 'https://icons.iconarchive.com/icons/awicons/vista-artistic/16/coin-add-icon.png',
+            handler: function (grid, rowIndex, colIndex, item, e, record) {},
           },
         ],
       },

@@ -5,25 +5,13 @@ const db = require('../models'),
     try {
       let body = req.body;
       let customer = {
+        fullName: body.fullName,
+        email: body.email,
         phone: body.phone,
-        name: body.name,
-        age: body.age,
-        gender: body.gender,
-        career: body.career,
-        address: body.address,
-        disease_type: body.disease_type,
-        re_examination_date: body.re_examination_date
-          .split('/')
-          .reverse()
-          .join('-'),
-        annual_examination: body.annual_examination,
-        note: body.note,
       };
       log(customer);
       Customer.create(customer)
         .then((data) => {
-          //log(data)
-          //data.customer.dataValues.re_examination_date = data.customer.dataValues.re_examination_date.substr(0,10)
           res.send({ success: true, data: data });
         })
         .catch((err) => {
@@ -33,17 +21,22 @@ const db = require('../models'),
               err.message || 'Some error occurred while creating the customer.',
           });
         });
-
-      // else
-      //   res.send({ success: false, message: 'Vui lòng đăng nhập' });
     } catch (error) {
       res.send({ success: false, message: error.message });
     }
   },
   list = (req, res) => {
-    Customer.findAll()
-      .then((data) => {
-        res.send(data);
+    let { start, limit } = req.query;
+    Customer.findAll({
+      offset: +start,
+      limit: +limit,
+      order: [
+        ['fullName', 'DESC'],
+      ],
+    })
+      .then(async (data) => {
+        const count = await Customer.count();
+        res.send({ records: data, totalCount: count });
       })
       .catch((err) => {
         res.status(500).send({
@@ -55,10 +48,10 @@ const db = require('../models'),
   },
   update = (req, res) => {
     const id = req.body.id;
-    req.body.re_examination_date = req.body.re_examination_date
-      .split('/')
-      .reverse()
-      .join('-');
+    // req.body.re_examination_date = req.body.re_examination_date
+    //   .split('/')
+    //   .reverse()
+    //   .join('-');
     Customer.update(req.body, {
       where: { id: id },
     })
@@ -83,9 +76,9 @@ const db = require('../models'),
       });
   },
   deleteCustomer = (req, res) => {
-    const id = req.params.id;
+    const ids = req.params.ids.split(',').map((e) => +e);
     Customer.destroy({
-      where: { id: id },
+      where: { id: ids },
     })
       .then((num) => {
         if (num == 1) {
@@ -96,14 +89,14 @@ const db = require('../models'),
         } else {
           res.send({
             success: false,
-            message: `Cannot delete Customer with id=${id}. Maybe Tutorial was not found!`,
+            message: `Cannot delete Customer with id=${ids.toString()}. Maybe Tutorial was not found!`,
           });
         }
       })
       .catch((err) => {
         res.status(500).send({
           success: false,
-          message: 'Could not delete Customer with id=' + id,
+          message: 'Could not delete Customer with ids=' + ids.toString(),
         });
       });
   };
