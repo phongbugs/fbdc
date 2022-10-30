@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="extjs/6.2/classic/theme-neptune/resources/theme-neptune-all.css" />
+    <link rel="stylesheet" href="extjs/6.2/packages/ux/classic/neptune/resources/ux-all.css" />
+    <link rel="stylesheet" href="css/grid.css" />
+    <link rel="stylesheet" href="css/form.css" />
+    <script src="extjs/6.2/ext-all.js"></script>
+    <link rel="shortcut icon" href="https://icons.iconarchive.com/icons/icons8/ios7/16/Cinema-Documentary-icon.png"
+        type="image/x-icon" />
+    <script src="js/jsencrypt.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div id="center" class="center">
+            <div id="loading" class="spinner"></div>
+        </div>
+    </div>
+    <script>
+        let currentVersion = () => new Date().getTime();
+        window.onload = () => {
+            authenticate((isAuthenticated) => {
+                if (isAuthenticated)
+                    loadScript('js/subscriptionGrid.js?v=' + currentVersion())
+                else
+                    loadScript('js/loginForm.js?v=' + currentVersion())
+                Ext.tip.QuickTipManager.init();
+            })
+        }
+    </script>
+</body>
+
+</html>

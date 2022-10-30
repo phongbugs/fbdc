@@ -33,17 +33,17 @@ Ext.define('KitchenSink.view.layout.Border', {
   },
 
   items: [
-    {
-      title: 'Header',
-      region: 'north',
-      height: 100,
-      minHeight: 75,
-      maxHeight: 150,
-      html: '<p>LOGO</p>',
-      collapsible: false,
-      header: false,
-      split: false,
-    },
+    // {
+    //   title: 'Header',
+    //   region: 'north',
+    //   height: 100,
+    //   minHeight: 75,
+    //   maxHeight: 150,
+    //   html: '<p>LOGO</p>',
+    //   collapsible: false,
+    //   header: false,
+    //   split: false,
+    // },
     {
       xtype: 'panel',
       collapsible: false,
@@ -84,6 +84,12 @@ Ext.define('KitchenSink.view.layout.Border', {
           {
             icon: 'https://icons.iconarchive.com/icons/saki/nuoveXT-2/16/Apps-session-logout-icon.png',
             text: 'Logout',
+            handler: () => {
+              document.cookie =
+                'auth-token' +
+                '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+              location.reload();
+            },
           },
         ],
       },

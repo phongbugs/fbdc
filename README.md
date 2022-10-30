@@ -11,7 +11,7 @@
   - Run migrate 1st by ```npx sequelize-cli db:migrate```
     - Create migration file:  ```npx sequelize-cli model:generate --name User --attributes firstName:string,lastName:string,email:string```
   - Run seeder by ```npx sequelize-cli db:seed:all```
-    - Create migration file: ```npx sequelize-cli seed:generate --name user ```
+    - Create migration file: ```npx sequelize-cli seed:generate --name user```
 
 - Run server
     ```js

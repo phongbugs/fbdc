@@ -52,7 +52,7 @@ var customerForm = Ext.create('Ext.form.Panel', {
     },
     {
       fieldLabel: 'Tên',
-      name: 'name',
+      name: 'fullName',
       allowBlank: false,
     },
     {
@@ -65,7 +65,6 @@ var customerForm = Ext.create('Ext.form.Panel', {
       mouseWheelEnabled: false,
     },
     {
-      xtype: 'numberfield',
       fieldLabel: 'Số điện thoại',
       name: 'phone',
       allowBlank: false,
@@ -75,49 +74,50 @@ var customerForm = Ext.create('Ext.form.Panel', {
     },
     {
       xtype: 'datefield',
-      fieldLabel: 'Ngày đăng kí',
-      name: 'subsrciption_date',
+      fieldLabel: 'Ngày hết hạn',
+      name: 'expiredDate',
       allowBlank: false,
-      value: new Date(),
+      //value: new Date(),
       format: 'd/m/Y',
+      disabled:true
     },
-    {
-      xtype: 'numberfield',
-      fieldLabel: 'Năm sinh',
-      name: 'birthday',
-      allowBlank: false,
-      minValue: 1930,
-      maxValue: 2022,
-    },
-    {
-      fieldLabel: 'Giới tính',
-      name: 'gender',
-      allowBlank: false,
-      xtype: 'combo',
-      width: 150,
-      editable: false,
-      store: new Ext.data.ArrayStore({
-        fields: ['id', 'name'],
-        data: [
-          [1, 'Nam'],
-          [0, 'Nữ'],
-        ],
-      }),
-      displayField: 'name',
-      valueField: 'id',
-      value: 1,
-      queryMode: 'local',
-    },
-    {
-      fieldLabel: 'Nghề nghiệp',
-      name: 'career',
-      allowBlank: false,
-    },
-    {
-      fieldLabel: 'Địa chỉ',
-      name: 'address',
-      allowBlank: false,
-    },
+    // {
+    //   xtype: 'numberfield',
+    //   fieldLabel: 'Năm sinh',
+    //   name: 'birthday',
+    //   allowBlank: false,
+    //   minValue: 1930,
+    //   maxValue: 2022,
+    // },
+    // {
+    //   fieldLabel: 'Giới tính',
+    //   name: 'gender',
+    //   allowBlank: false,
+    //   xtype: 'combo',
+    //   width: 150,
+    //   editable: false,
+    //   store: new Ext.data.ArrayStore({
+    //     fields: ['id', 'name'],
+    //     data: [
+    //       [1, 'Nam'],
+    //       [0, 'Nữ'],
+    //     ],
+    //   }),
+    //   displayField: 'name',
+    //   valueField: 'id',
+    //   value: 1,
+    //   queryMode: 'local',
+    // },
+    // {
+    //   fieldLabel: 'Nghề nghiệp',
+    //   name: 'career',
+    //   allowBlank: false,
+    // },
+    // {
+    //   fieldLabel: 'Địa chỉ',
+    //   name: 'address',
+    //   allowBlank: false,
+    // },
     
     // {
     //   xtype: 'numberfield',
@@ -131,11 +131,11 @@ var customerForm = Ext.create('Ext.form.Panel', {
     //   msgTarget: 'under',
     //   invalidText: 'Khám thường niên 0-10',
     // },
-    {
-      fieldLabel: 'Ghi chú',
-      name: 'note',
-      allowBlank: true,
-    },
+    // {
+    //   fieldLabel: 'Ghi chú',
+    //   name: 'note',
+    //   allowBlank: true,
+    // },
   ],
   buttons: [
     {
@@ -173,8 +173,8 @@ var customerForm = Ext.create('Ext.form.Panel', {
                     let r = action.result.data,
                       rIndex = store.getData().getCount();
                     // fix bind new r(just added) to form
-                    r.re_examination_date = r.re_examination_date.substr(0, 10);
-                    r.gender = +r.gender;
+                    //r.re_examination_date = r.re_examination_date.substr(0, 10);
+                    //r.gender = +r.gender;
                     store.insert(rIndex, r);
                     customerForm.reset();
                     grid.getView().addRowCls(rIndex, 'success');
@@ -182,11 +182,6 @@ var customerForm = Ext.create('Ext.form.Panel', {
                     break;
                   case 'update':
                     let record = form.getValues();
-                    // fix binding betwwen datefield & datecolumn
-                    record.re_examination_date = record.re_examination_date
-                      .split('-')
-                      .reverse()
-                      .join('/');
                     log(record);
                     var removedRecord = store.findRecord('id', record.id);
                     var recordIndex = store.indexOf(removedRecord);
