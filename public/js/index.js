@@ -1,6 +1,21 @@
 const getCmp = function (query) {
-  return Ext.ComponentQuery.query(query)[0];
-};
+    return Ext.ComponentQuery.query(query)[0];
+  },
+  createTab = ({ itemIdTabPanel, title, icon, htmlFile }) => {
+    var tabPanel = getCmp(itemIdTabPanel)
+    var tab = tabPanel.add({
+      xtype: 'component',
+      title: title,
+      icon: icon,
+      closable: true,
+      autoEl: {
+        tag: 'iframe',
+        src: htmlFile,
+        style: 'border:none',
+      },
+    });
+    tabPanel.setActiveTab(tab);
+  };
 Ext.define('KitchenSink.view.layout.Border', {
   extend: 'Ext.panel.Panel',
   xtype: 'layout-border',
@@ -62,24 +77,26 @@ Ext.define('KitchenSink.view.layout.Border', {
           {
             text: 'Users',
             iconCls: 'users',
-            handler: () => {
-              var tab = getCmp('#mainContent').add({
-                xtype: 'component',
-                title: 'User',
+            handler: (cmp) => {
+              createTab({
+                itemIdTabPanel: '#mainContent',
+                title: cmp.text,
                 icon: 'https://icons.iconarchive.com/icons/custom-icon-design/pretty-office-8/16/Users-icon.png',
-                closable: true,
-                autoEl: {
-                  tag: 'iframe',
-                  src: '/customer.html',
-                  style: 'border:none',
-                },
+                htmlFile: '/customer.html',
               });
-              getCmp('#mainContent').setActiveTab(tab);
             },
           },
           {
-            text: 'Subscription History',
+            text: 'Subscriptions History',
             icon: 'https://icons.iconarchive.com/icons/mcdo-design/smooth-leopard/16/History-Folder-Willow-icon.png',
+            handler: (cmp) => {
+              createTab({
+                itemIdTabPanel: '#mainContent',
+                title: cmp.text,
+                icon: cmp.icon,
+                htmlFile: '/subscription.html',
+              });
+            },
           },
           {
             icon: 'https://icons.iconarchive.com/icons/saki/nuoveXT-2/16/Apps-session-logout-icon.png',

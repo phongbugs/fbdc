@@ -1,9 +1,9 @@
-var customerForm = Ext.create('Ext.form.Panel', {
-  id: 'customerForm',
+var subscriptionForm = Ext.create('Ext.form.Panel', {
+  id: 'subscriptionForm',
   bodyStyle: 'background:transparent',
-  title: 'Thông tin người dùng',
+  title: 'Thông tin đăng kí',
   icon:
-    'https://icons.iconarchive.com/icons/custom-icon-design/pretty-office-8/16/User-blue-icon.png',
+    'https://icons.iconarchive.com/icons/hopstarter/sleek-xp-basic/16/Document-Write-icon.png',
   bodyPadding: 15,
   width: 450,
   layout: 'anchor',
@@ -28,16 +28,16 @@ var customerForm = Ext.create('Ext.form.Panel', {
     {
       type: 'close',
       handler: () => {
-        customerForm.hide();
-        Ext.getCmp('customerGrid').enable();
+        subscriptionForm.hide();
+        Ext.getCmp('subscriptionGrid').enable();
       },
     },
   ],
   listeners: {
-    hide: () => Ext.getCmp('customerGrid').enable(),
+    hide: () => Ext.getCmp('subscriptionGrid').enable(),
     show: () =>
-      Ext.getCmp('btnSubmitCustomerForm').setIconCls(
-        customerFormAction.iconCls
+      Ext.getCmp('btnSubmitsubscriptionForm').setIconCls(
+        subscriptionFormAction.iconCls
       ),
   },
   defaultType: 'textfield',
@@ -65,77 +65,23 @@ var customerForm = Ext.create('Ext.form.Panel', {
       mouseWheelEnabled: false,
     },
     {
-      fieldLabel: 'Số điện thoại',
-      name: 'phone',
+      xtype: 'datefield',
+      fieldLabel: 'Ngày đăng kí',
+      name: 'subscriptionDate',
       allowBlank: false,
-      hideTrigger: true,
-      keyNavEnabled: false,
-      mouseWheelEnabled: false,
+      //value: new Date(),
+      format: 'd/m/Y',
+      disabled:true
     },
-    // {
-    //   xtype: 'datefield',
-    //   fieldLabel: 'Ngày hết hạn',
-    //   name: 'expiredDate',
-    //   allowBlank: false,
-    //   value: new Date(),
-    //   format: 'd/m/Y',
-    //   disabled:true
-    // },
-    // {
-    //   xtype: 'numberfield',
-    //   fieldLabel: 'Năm sinh',
-    //   name: 'birthday',
-    //   allowBlank: false,
-    //   minValue: 1930,
-    //   maxValue: 2022,
-    // },
-    // {
-    //   fieldLabel: 'Giới tính',
-    //   name: 'gender',
-    //   allowBlank: false,
-    //   xtype: 'combo',
-    //   width: 150,
-    //   editable: false,
-    //   store: new Ext.data.ArrayStore({
-    //     fields: ['id', 'name'],
-    //     data: [
-    //       [1, 'Nam'],
-    //       [0, 'Nữ'],
-    //     ],
-    //   }),
-    //   displayField: 'name',
-    //   valueField: 'id',
-    //   value: 1,
-    //   queryMode: 'local',
-    // },
-    // {
-    //   fieldLabel: 'Nghề nghiệp',
-    //   name: 'career',
-    //   allowBlank: false,
-    // },
-    // {
-    //   fieldLabel: 'Địa chỉ',
-    //   name: 'address',
-    //   allowBlank: false,
-    // },
-    
-    // {
-    //   xtype: 'numberfield',
-    //   fieldLabel: 'Khám thường niên',
-    //   name: 'annual_examination',
-    //   allowBlank: false,
-    //   minValue: 0,
-    //   maxValue: 10,
-    //   //regex: /^([1-9]|1[0-9]):([0-5][0-9])(\s[a|p]m)$/i,
-    //   maskRe: /[\d\s:amp]/i,
-    //   msgTarget: 'under',
-    //   invalidText: 'Khám thường niên 0-10',
-    // },
-    // {
-    //   fieldLabel: 'Ghi chú',
-    //   name: 'note',
-    //   allowBlank: true,
-    // },
+    {
+      xtype: 'datefield',
+      fieldLabel: 'Ngày hết hạn',
+      name: 'expiredDate',
+      allowBlank: false,
+      //value: new Date(),
+      format: 'd/m/Y',
+      disabled:true
+    },
   ],
   buttons: [
     {
@@ -145,11 +91,11 @@ var customerForm = Ext.create('Ext.form.Panel', {
       handler: function () {
         this.up('form').getForm().reset();
       },
-      id: 'btnResetCustomerForm',
+      id: 'btnResetsubscriptionForm',
     },
     {
-      id: 'btnSubmitCustomerForm',
-      text: customerFormAction.label,
+      id: 'btnSubmitsubscriptionForm',
+      text: subscriptionFormAction.label,
       formBind: true,
       disabled: false,
       handler: function () {
@@ -159,15 +105,15 @@ var customerForm = Ext.create('Ext.form.Panel', {
           button.setIconCls('spinner');
           button.disable();
           form.submit({
-            url: hostAPI + '/customer/' + customerFormAction.name,
-            method: customerFormAction.method,
+            url: hostAPI + '/subscription/' + subscriptionFormAction.name,
+            method: subscriptionFormAction.method,
             success: function (form, action) {
               if (!action.result.success)
                 Ext.Msg.alert('Kểt Quả', action.result.message);
               else {
-                let grid = Ext.getCmp('customerGrid'),
+                let grid = Ext.getCmp('subscriptionGrid'),
                   store = grid.getStore();
-                switch (customerFormAction.name) {
+                switch (subscriptionFormAction.name) {
                   case 'create':
                     // add new record
                     let r = action.result.data,
@@ -176,9 +122,9 @@ var customerForm = Ext.create('Ext.form.Panel', {
                     //r.re_examination_date = r.re_examination_date.substr(0, 10);
                     //r.gender = +r.gender;
                     store.insert(rIndex, r);
-                    customerForm.reset();
+                    subscriptionForm.reset();
                     grid.getView().addRowCls(rIndex, 'success');
-                    customerForm.hide();
+                    subscriptionForm.hide();
                     break;
                   case 'update':
                     let record = form.getValues();
@@ -188,12 +134,12 @@ var customerForm = Ext.create('Ext.form.Panel', {
                     store.remove(removedRecord);
                     store.insert(recordIndex, record);
                     grid.getView().addRowCls(recordIndex, 'success');
-                    customerForm.hide();
+                    subscriptionForm.hide();
                     break;
                 }
               }
               button.enable();
-              button.setIconCls(customerFormAction.icon);
+              button.setIconCls(subscriptionFormAction.icon);
             },
             failure: function (form, action) {
               Ext.Msg.alert('Thông báo', action.result.message);
@@ -205,5 +151,5 @@ var customerForm = Ext.create('Ext.form.Panel', {
       },
     },
   ],
-  renderTo: 'app',
+  renderTo: Ext.getBody(),
 });

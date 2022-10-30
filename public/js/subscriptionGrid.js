@@ -44,9 +44,17 @@ let Groups,
     find: { name: 'find', label: 'Tìm kiếm', icon: '' },
     logout: { name: 'logout', label: 'Đăng xuất', icon: '' },
   },
-  customerFormAction = actions.create,
+  subscriptionFormAction = actions.create,
   getCmp = function (query) {
     return Ext.ComponentQuery.query(query)[0];
+  },
+  formatCash = (str) => {
+    return str
+      .split('')
+      .reverse()
+      .reduce((prev, next, index) => {
+        return (index % 3 ? next : next + '.') + prev;
+      });
   };
 Ext.onReady(function () {
   Ext.define('Subscription', {
@@ -60,7 +68,7 @@ Ext.onReady(function () {
       'expiredDate',
     ],
   });
-  let storeCustomer = Ext.create('Ext.data.Store', {
+  let storesubscription = Ext.create('Ext.data.Store', {
     model: 'Subscription',
     proxy: {
       type: 'ajax',
@@ -72,16 +80,16 @@ Ext.onReady(function () {
     listeners: {
       load: function (_, records, successful, operation, eOpts) {
         data = records;
-        Groups = storeCustomer.getGroups();
+        Groups = storesubscription.getGroups();
       },
     },
     autoLoad: { start: 0, limit: 25 },
   });
 
-  let customerGrid = Ext.create('Ext.grid.Panel', {
+  let subscriptionGrid = Ext.create('Ext.grid.Panel', {
     renderTo: 'app',
     itemId: 'subscriptionGrid',
-    store: storeCustomer,
+    store: storesubscription,
     width: Ext.getBody().getViewSize().width,
     height: Ext.getBody().getViewSize().height,
     icon: 'https://icons.iconarchive.com/icons/google/noto-emoji-travel-places/16/42491-hospital-icon.png',
@@ -101,21 +109,21 @@ Ext.onReady(function () {
     features: [featureGrouping],
     listeners: {
       viewready: (_) => {
-        loadScript('js/customerForm.js');
+        loadScript('js/subscriptionForm.js');
       },
       cellclick(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
         if (cellIndex > 0 && cellIndex <= 5) {
-          customerGrid.setDisabled(true);
-          customerFormAction = actions.update;
-          customerForm.show();
+          subscriptionGrid.setDisabled(true);
+          subscriptionFormAction = actions.update;
+          subscriptionForm.show();
           //fix binding betwwen datefield & datecolumn
           // record.set(
           //   'expiredDate',
           //   record.get('expiredDate').split('/').reverse().join('-')
           // );
-          customerForm.loadRecord(record);
-          customerForm.query('#btnResetCustomerForm')[0].setDisabled(true);
-          submitButton = customerForm.query('#btnSubmitCustomerForm')[0];
+          subscriptionForm.loadRecord(record);
+          subscriptionForm.query('#btnResetsubscriptionForm')[0].setDisabled(true);
+          submitButton = subscriptionForm.query('#btnSubmitsubscriptionForm')[0];
           submitButton.setText(actions.update.label);
           submitButton.setIcon(actions.update.icon);
         }
@@ -129,7 +137,7 @@ Ext.onReady(function () {
         disabled: true,
         tooltip: 'Xóa đăng kí',
         handler: () => {
-          var seletedRecords = customerGrid
+          var seletedRecords = subscriptionGrid
             .getSelectionModel()
             .getSelected()
             .getRange();
@@ -143,7 +151,7 @@ Ext.onReady(function () {
                   method: 'DELETE',
                   url: hostAPI + '/subscription/delete/' + ids.toString(),
                   success: function (response) {
-                    storeCustomer.remove(seletedRecords);
+                    storesubscription.remove(seletedRecords);
                   },
                   failure: function (response) {
                     alert(JSON.stringify(response));
@@ -161,8 +169,8 @@ Ext.onReady(function () {
         //text: 'Nạp lại danh sách',
         listeners: {
           click: () => {
-            storeCustomer.clearFilter();
-            storeCustomer.reload();
+            storesubscription.clearFilter();
+            storesubscription.reload();
           },
         },
       },
@@ -173,15 +181,15 @@ Ext.onReady(function () {
         text: actions.create.label,
         listeners: {
           click: () => {
-            customerGrid.setDisabled(true);
-            customerFormAction = actions.create;
-            customerForm.show();
-            customerForm.reset();
-            resetButton = customerForm.query('#btnResetCustomerForm')[0];
+            subscriptionGrid.setDisabled(true);
+            subscriptionFormAction = actions.create;
+            subscriptionForm.show();
+            subscriptionForm.reset();
+            resetButton = subscriptionForm.query('#btnResetsubscriptionForm')[0];
             resetButton.setDisabled(false);
-            submitButton = customerForm.query('#btnSubmitCustomerForm')[0];
-            submitButton.setText(customerFormAction.label);
-            submitButton.setIcon(customerFormAction.icon);
+            submitButton = subscriptionForm.query('#btnSubmitsubscriptionForm')[0];
+            submitButton.setText(subscriptionFormAction.label);
+            submitButton.setIcon(subscriptionFormAction.icon);
           },
         },
       },
@@ -206,11 +214,11 @@ Ext.onReady(function () {
         listeners: {
           change: (_, val) => {
             if (val !== 'default') {
-              storeCustomer.setGroupField(val);
-              Groups = storeCustomer.getGroups();
-              storeCustomer.loadData(data);
+              storesubscription.setGroupField(val);
+              Groups = storesubscription.getGroups();
+              storesubscription.loadData(data);
             } else {
-              storeCustomer.setGroupField(undefined);
+              storesubscription.setGroupField(undefined);
             }
           },
         },
@@ -218,8 +226,8 @@ Ext.onReady(function () {
       {
         xtype: 'textfield',
         width: 250,
-        id: 'txtCustomerFindField',
-        itemId: 'txtCustomerFindField',
+        id: 'txtsubscriptionFindField',
+        itemId: 'txtsubscriptionFindField',
         enableKeyEvents: true,
         listeners: {
           keypress: () => Ext.getCmp('btnFind').fireEvent('click'),
@@ -236,8 +244,8 @@ Ext.onReady(function () {
         icon: 'https://icons.iconarchive.com/icons/zerode/plump/16/Search-icon.png',
         listeners: {
           click: () => {
-            storeCustomer.clearFilter();
-            var searchValue = Ext.getCmp('txtCustomerFindField').getValue();
+            storesubscription.clearFilter();
+            var searchValue = Ext.getCmp('txtsubscriptionFindField').getValue();
             if (!!searchValue) {
               var filters = [
                 new Ext.util.Filter({
@@ -271,7 +279,7 @@ Ext.onReady(function () {
                   },
                 }),
               ];
-              storeCustomer.filter(filters);
+              storesubscription.filter(filters);
             }
           },
         },
@@ -300,91 +308,22 @@ Ext.onReady(function () {
         dataIndex: 'email',
       },
       {
-        text: 'Số điện thoại',
+        text: 'Số tiền',
         width: 120,
-        dataIndex: 'phone',
+        dataIndex: 'amount',
+        renderer: (v) => (v ? formatCash(v) : ''),
+      },
+      {
+        text: 'Ngày đăng ký',
+        width: 120,
+        dataIndex: 'subscriptionDate',
+        //renderer: (v) => v.split('-').reverse().join('/'),
       },
       {
         text: 'Ngày hết hạn',
         width: 120,
         dataIndex: 'expiredDate',
         //renderer: (v) => v.split('-').reverse().join('/'),
-      },
-      // {
-      //   text: 'Địa chỉ',
-      //   width: 120,
-      //   dataIndex: 'address',
-      // },
-      // {
-      //   text: 'Năm sinh',
-      //   width: 100,
-      //   dataIndex: 'birthday',
-      // },
-      // {
-      //   text: 'Giới tính',
-      //   width: 80,
-      //   dataIndex: 'gender',
-      //   renderer: (v) => (v === 0 ? 'Nữ' : 'Nam'),
-      // },
-      // {
-      //   text: 'Nghề nghiệp',
-      //   width: 100,
-      //   dataIndex: 'career',
-      // },
-
-      // {
-      //   text: 'Ghi chú',
-      //   width: 150,
-      //   dataIndex: 'note',
-      // },
-      {
-        xtype: 'actioncolumn',
-        width: 40,
-        tooltip: 'Đăng Ký/Gia Hạn',
-        text: 'ĐK',
-        align: 'center',
-        items: [
-          {
-            icon: 'https://icons.iconarchive.com/icons/awicons/vista-artistic/16/coin-add-icon.png',
-            handler: function (grid, rowIndex, colIndex, item, e, record) {},
-          },
-        ],
-      },
-      {
-        xtype: 'actioncolumn',
-        width: 60,
-        tooltip: 'Xóa người dùng',
-        text: 'Xóa',
-        align: 'center',
-        items: [
-          {
-            icon: actions.delete.icon,
-            handler: function (grid, rowIndex, colIndex, item, e, record) {
-              Ext.Msg.confirm(
-                'Xác nhận',
-                'Bạn muốn xóa người dùng này ?',
-                (buttonId) => {
-                  if (buttonId === 'yes') {
-                    let store = grid.getStore();
-                    var recordIndex = store.indexOf(record);
-                    var id = grid.getStore().getAt(recordIndex).get('id');
-                    Ext.Ajax.request({
-                      method: 'DELETE',
-                      url: hostAPI + '/customer/delete/' + id,
-                      success: function (response) {
-                        //log(response);
-                        store.removeAt(recordIndex);
-                      },
-                      failure: function (response) {
-                        alert(JSON.stringify(response));
-                      },
-                    });
-                  }
-                }
-              );
-            },
-          },
-        ],
       },
     ],
   });
