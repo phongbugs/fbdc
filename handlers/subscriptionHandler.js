@@ -29,25 +29,22 @@ const db = require('../models'),
   list = (req, res) => {
     try {
       let { start, limit } = req.query;
-      log(start + '-' + limit);
-      log(db.customer);
-      log(db.subscription);
       Subscription.findAll({
-        //attributes: ['fullName'],
+        attributes: ['id', 'customerId', 'amount', 'subscriptionDate'],
         include: [
           {
             model: db.customer,
-            attributes: ['fullName'],
+            attributes: ['fullName', 'email'],
             required: true,
           },
         ],
         offset: +start,
         limit: +limit,
-        //order: [['fullName', 'DESC']],
+        order: [['subscriptionDate', 'DESC']],
       })
         .then(async (data) => {
           const count = await Subscription.count();
-          res.send({ records: data, totalCount: count });
+          res.send({ records: data, totalCount: count, success: true });
         })
         .catch((err) => {
           res.status(500).send({

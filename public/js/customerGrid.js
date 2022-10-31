@@ -82,7 +82,6 @@ Ext.onReady(function () {
       },
     },
     autoLoad: true,
-    //autoLoad: { start: 0, limit: 25 },
   });
 
   let customerGrid = Ext.create('Ext.grid.Panel', {
@@ -96,7 +95,7 @@ Ext.onReady(function () {
     plugins: ['gridfilters'],
     multiSelect: true,
     selModel: Ext.create('Ext.selection.CheckboxModel', {
-      mode: 'SIMPLE',
+      mode: 'SINGLE',
       listeners: {
         selectionchange: function (model, selections) {
           var btnDelete = getCmp('#btnDelete');

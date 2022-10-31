@@ -31,7 +31,7 @@ const db = require('../models'),
       offset: +start,
       limit: +limit,
       order: [
-        ['fullName', 'DESC'],
+        ['createdAt', 'DESC'],
       ],
     })
       .then(async (data) => {

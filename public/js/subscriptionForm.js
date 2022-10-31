@@ -29,12 +29,12 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       type: 'close',
       handler: () => {
         subscriptionForm.hide();
-        Ext.getCmp('subscriptionGrid').enable();
+        getCmp('#subscriptionGrid').enable();
       },
     },
   ],
   listeners: {
-    hide: () => Ext.getCmp('subscriptionGrid').enable(),
+    hide: () => getCmp('#subscriptionGrid').enable(),
     show: () =>
       Ext.getCmp('btnSubmitsubscriptionForm').setIconCls(
         subscriptionFormAction.iconCls
@@ -65,7 +65,12 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       mouseWheelEnabled: false,
     },
     {
-      xtype: 'datefield',
+      fieldLabel: 'Số tiền',
+      name: 'amount',
+      allowBlank: false,
+    },
+    {
+      //xtype: 'datefield',
       fieldLabel: 'Ngày đăng kí',
       name: 'subscriptionDate',
       allowBlank: false,

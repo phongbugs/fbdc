@@ -75,6 +75,20 @@ Ext.onReady(function () {
       url: hostAPI + '/subscription/list',
       reader: {
         type: 'json',
+        root: 'records',
+        totalProperty: 'totalCount',
+        transform: {
+          fn: function (data) {
+            if (data.success) {
+              data.records = data.records.map((record) => {
+                record = { ...record, ...record['Customer'] };
+                delete record['Customer'];
+                return record;
+              });
+            }
+            return data;
+          },
+        },
       },
     },
     listeners: {
@@ -83,7 +97,7 @@ Ext.onReady(function () {
         Groups = storesubscription.getGroups();
       },
     },
-    autoLoad: { start: 0, limit: 25 },
+    autoLoad: true,
   });
 
   let subscriptionGrid = Ext.create('Ext.grid.Panel', {
@@ -97,7 +111,7 @@ Ext.onReady(function () {
     plugins: ['gridfilters'],
     multiSelect: true,
     selModel: Ext.create('Ext.selection.CheckboxModel', {
-      mode: 'SIMPLE',
+      mode: 'SINGLE',
       listeners: {
         selectionchange: function (model, selections) {
           var btnDelete = getCmp('#btnDelete');
@@ -111,22 +125,22 @@ Ext.onReady(function () {
       viewready: (_) => {
         loadScript('js/subscriptionForm.js');
       },
-      cellclick(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
-        if (cellIndex > 0 && cellIndex <= 5) {
-          subscriptionGrid.setDisabled(true);
-          subscriptionFormAction = actions.update;
-          subscriptionForm.show();
-          //fix binding betwwen datefield & datecolumn
-          // record.set(
-          //   'expiredDate',
-          //   record.get('expiredDate').split('/').reverse().join('-')
-          // );
-          subscriptionForm.loadRecord(record);
-          subscriptionForm.query('#btnResetsubscriptionForm')[0].setDisabled(true);
-          submitButton = subscriptionForm.query('#btnSubmitsubscriptionForm')[0];
-          submitButton.setText(actions.update.label);
-          submitButton.setIcon(actions.update.icon);
-        }
+      celldblclick(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
+        subscriptionGrid.setDisabled(true);
+        subscriptionFormAction = actions.update;
+        subscriptionForm.show();
+        //fix binding betwwen datefield & datecolumn
+        // record.set(
+        //   'expiredDate',
+        //   record.get('expiredDate').split('/').reverse().join('-')
+        // );
+        subscriptionForm.loadRecord(record);
+        subscriptionForm
+          .query('#btnResetsubscriptionForm')[0]
+          .setDisabled(true);
+        submitButton = subscriptionForm.query('#btnSubmitsubscriptionForm')[0];
+        submitButton.setText(actions.update.label);
+        submitButton.setIcon(actions.update.icon);
       },
     },
     tbar: [
@@ -185,9 +199,13 @@ Ext.onReady(function () {
             subscriptionFormAction = actions.create;
             subscriptionForm.show();
             subscriptionForm.reset();
-            resetButton = subscriptionForm.query('#btnResetsubscriptionForm')[0];
+            resetButton = subscriptionForm.query(
+              '#btnResetsubscriptionForm'
+            )[0];
             resetButton.setDisabled(false);
-            submitButton = subscriptionForm.query('#btnSubmitsubscriptionForm')[0];
+            submitButton = subscriptionForm.query(
+              '#btnSubmitsubscriptionForm'
+            )[0];
             submitButton.setText(subscriptionFormAction.label);
             submitButton.setIcon(subscriptionFormAction.icon);
           },
@@ -288,6 +306,16 @@ Ext.onReady(function () {
     bbar: {
       xtype: 'pagingtoolbar',
       displayInfo: true,
+      store: storesubscription,
+      displayMsg: 'Dữ liệu từ {0} - {1} of {2}',
+      emptyMsg: 'Không có dữ liệu',
+      plugins: [
+        {
+          ptype: 'pagingtoolbarresizer',
+          options: [25, 30, 50, 100, 125, 150, 200, 400, 500, 700, 1000],
+          displayMsg: 'Số lượng dòng trên một trang',
+        },
+      ],
     },
     columns: [
       new Ext.grid.RowNumberer({ dataIndex: 'no', text: 'STT', width: 60 }),
@@ -295,7 +323,7 @@ Ext.onReady(function () {
         text: 'ID',
         width: 50,
         dataIndex: 'id',
-        hidden: true,
+        //hidden: true,
       },
       {
         text: 'Tên người dùng',
@@ -304,20 +332,20 @@ Ext.onReady(function () {
       },
       {
         text: 'Email',
-        width: 180,
+        width: 222,
         dataIndex: 'email',
       },
       {
         text: 'Số tiền',
         width: 120,
         dataIndex: 'amount',
-        renderer: (v) => (v ? formatCash(v) : ''),
+        renderer: (v) => (v ? formatCash(v.toString()) + ' VND' : ''),
       },
       {
         text: 'Ngày đăng ký',
         width: 120,
         dataIndex: 'subscriptionDate',
-        //renderer: (v) => v.split('-').reverse().join('/'),
+        renderer: (v) => new Date(v).toLocaleDateString(),
       },
       {
         text: 'Ngày hết hạn',
