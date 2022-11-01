@@ -23,6 +23,7 @@ db.sequelize = sequelize;
 db.customer = require('./customer.js')(sequelize, Sequelize);
 db.user = require('./user.js')(sequelize, Sequelize);
 db.subscription = require('./subscription.js')(sequelize, Sequelize);
+db.subscriptionDetail = require('./subscriptiondetail.js')(sequelize, Sequelize);
 
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {

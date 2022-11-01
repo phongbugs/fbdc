@@ -16,20 +16,18 @@ module.exports = {
     Array.prototype.random = function () {
       return this[Math.floor(Math.random() * this.length)];
     };
-    var subscription = [];
-    Array.from({ length: 1000 }).forEach(() => {
-      subscription.push({
-        customerId: Array.from({ length: 1000 }, (_, i) => i + 1).random(),
-        totalAmount:[25000, 50000, 75000, 150000, 300000].random(),
-        totalDay: [30, 60, 90, 180, 360].random(),
-        expiredDate: faker.date.birthdate(),
-        status:[true, false].random(),
+    var subscriptionDetail = [];
+    Array.from({ length: 5000 }).forEach(() => {
+      subscriptionDetail.push({
+        subscriptionId: Array.from({ length: 1000 }, (_, i) => i + 1).random(),
+        amount: [25000, 50000, 75000, 150000, 300000].random(),
+        subscriptionDate: faker.date.birthdate(),
         createdAt: faker.date.birthdate(),
         updatedAt: faker.date.birthdate(),
       });
     });
-    console.log(subscription);
-    await queryInterface.bulkInsert('subscriptions', subscription, {});
+    console.log(subscriptionDetail);
+    await queryInterface.bulkInsert('subscriptiondetails', subscriptionDetail, {});
   },
 
   async down(queryInterface, Sequelize) {

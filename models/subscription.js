@@ -1,7 +1,5 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Subscription extends Model {
     /**
@@ -13,16 +11,22 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       this.belongsTo(models.customer, {
         foreignKey: 'customerId',
-      })
+      });
+      this.hasMany(models.subscriptionDetail)
     }
   }
-  Subscription.init({
-    customerId: DataTypes.INTEGER,
-    amount: DataTypes.INTEGER,
-    subscriptionDate: DataTypes.DATE
-  }, {
-    sequelize,
-    modelName: 'Subscription',
-  });
+  Subscription.init(
+    {
+      customerId: DataTypes.INTEGER,
+      totalAmount: DataTypes.REAL,
+      totalDay: DataTypes.INTEGER,
+      status: DataTypes.BOOLEAN,
+      expiredDate: DataTypes.DATE,
+    },
+    {
+      sequelize,
+      modelName: 'Subscription',
+    }
+  );
   return Subscription;
 };

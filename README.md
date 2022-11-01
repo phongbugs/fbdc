@@ -12,9 +12,11 @@
   
       ```npx sequelize-cli model:generate --name User --attributes username:string,password:string```
 
-      ```npx sequelize-cli model:generate --name Customer --attributes fullName:string,email:string,phone:string,gender:boolean,birthday:dateonly,address:string,career:string,note:string```
+      ```npx sequelize-cli model:generate --name Customer --attributes fullName:string,email:string,phone: string,gender:boolean,birthday:dateonly,address:string,career:string,note:string```
 
-      ```npx sequelize-cli model:generate --name Subscription --attributes customerId:integer,amount:real,subscriptionDate:date```
+      ```npx sequelize-cli model:generate --name Subscription --attributes customerId:integer,totalAmount:real,totalDays:integer,expiredDate:date```
+
+       ```npx sequelize-cli model:generate --name SubscriptionDetail --attributes subscriptionId:integer,amount:real,subscriptionDate:date```
 
   - Create reference keys at migration files, the key will show at Diagram Relationship DB
     ```js

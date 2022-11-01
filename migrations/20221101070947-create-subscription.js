@@ -16,11 +16,17 @@ module.exports = {
           key: 'id',
         },
       },
-      amount: {
+      totalAmount: {
         type: Sequelize.REAL
       },
-      subscriptionDate: {
+      totalDay: {
+        type: Sequelize.INTEGER
+      },
+      expiredDate: {
         type: Sequelize.DATE
+      },
+      status: {
+        type: Sequelize.BOOLEAN
       },
       createdAt: {
         allowNull: false,
