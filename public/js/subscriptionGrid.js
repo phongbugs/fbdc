@@ -63,9 +63,12 @@ Ext.onReady(function () {
       'id',
       'fullName',
       'email',
-      'amount',
+      'totalAmount',
+      'totalDay',
       'subscriptionDate',
+      'SubscriptionDetails',
       'expiredDate',
+      'status',
     ],
   });
   let storesubscription = Ext.create('Ext.data.Store', {
@@ -83,6 +86,21 @@ Ext.onReady(function () {
               data.records = data.records.map((record) => {
                 record = { ...record, ...record['Customer'] };
                 delete record['Customer'];
+                // sum amount
+                record.SubscriptionDetails.forEach((subscriptionDetail) => {
+                  record.totalAmount += subscriptionDetail.amount;
+                });
+                record.totalDay = (record.totalAmount / 25000) * 30;
+                record.subscriptionDate = _.min(
+                  record.SubscriptionDetails.map(
+                    (s) => new Date(s.subscriptionDate)
+                  )
+                );
+                record.expiredDate = new Date(
+                  new Date(record.subscriptionDate).getTime() +
+                    record.totalDay * 24 * 3600 * 1000
+                );
+                //console.log(record)
                 return record;
               });
             }
@@ -111,7 +129,7 @@ Ext.onReady(function () {
     plugins: ['gridfilters'],
     multiSelect: true,
     selModel: Ext.create('Ext.selection.CheckboxModel', {
-      mode: 'SINGLE',
+      mode: 'MULTI',
       listeners: {
         selectionchange: function (model, selections) {
           var btnDelete = getCmp('#btnDelete');
@@ -124,6 +142,7 @@ Ext.onReady(function () {
     listeners: {
       viewready: (_) => {
         loadScript('js/subscriptionForm.js');
+        loadScript('js/subscriptionDetailGrid.js');
       },
       celldblclick(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
         subscriptionGrid.setDisabled(true);
@@ -134,6 +153,11 @@ Ext.onReady(function () {
         //   'expiredDate',
         //   record.get('expiredDate').split('/').reverse().join('-')
         // );
+        subscriptionDetailGridData = getCmp('#subscriptionGrid')
+          .getStore()
+          .getAt(rowIndex)
+          .get('SubscriptionDetails');
+        storeSubscriptionDetail.loadData(subscriptionDetailGridData);
         subscriptionForm.loadRecord(record);
         subscriptionForm
           .query('#btnResetsubscriptionForm')[0]
@@ -318,12 +342,17 @@ Ext.onReady(function () {
       ],
     },
     columns: [
-      new Ext.grid.RowNumberer({ dataIndex: 'no', text: 'STT', width: 60 }),
+      {
+        xtype: 'rownumberer',
+        dataIndex: 'id',
+        text: 'STT',
+        width: 60,
+      },
       {
         text: 'ID',
         width: 50,
         dataIndex: 'id',
-        //hidden: true,
+        hidden: true,
       },
       {
         text: 'Tên người dùng',
@@ -338,21 +367,38 @@ Ext.onReady(function () {
       {
         text: 'Số tiền',
         width: 120,
-        dataIndex: 'amount',
+        dataIndex: 'totalAmount',
         renderer: (v) => (v ? formatCash(v.toString()) + ' VND' : ''),
+      },
+      {
+        text: 'Số ngày',
+        width: 90,
+        dataIndex: 'totalDay',
       },
       {
         text: 'Ngày đăng ký',
         width: 120,
         dataIndex: 'subscriptionDate',
-        renderer: (v) => new Date(v).toLocaleDateString(),
+        renderer: (v) => v.toLocaleDateString('vi-VN'),
       },
       {
         text: 'Ngày hết hạn',
         width: 120,
         dataIndex: 'expiredDate',
-        //renderer: (v) => v.split('-').reverse().join('/'),
+        renderer: (v) => v.toLocaleDateString('vi-VN'),
+      },
+      {
+        text: 'Trạng thái',
+        width: 100,
+        dataIndex: 'status',
+        renderer: (v) => (v ? 'Còn hạng' : 'Hết hạng'),
       },
     ],
+    viewConfig: {
+      getRowClass: function (record, index, rowParams) {
+        //console.log(record.SubscriptionDetails());
+        return !record.get('status') ? 'expired' : 'active';
+      },
+    },
   });
 });

@@ -30,8 +30,19 @@ const db = require('../models'),
     try {
       let { start, limit } = req.query;
       Subscription.findAll({
-        attributes: ['id', 'customerId', 'amount', 'subscriptionDate'],
+        attributes: [
+          'id',
+          'customerId',
+          'totalAmount',
+          'status',
+          'expiredDate',
+        ],
         include: [
+          {
+            model: db.subscriptionDetail,
+            attributes: ['subscriptionId', 'amount', 'subscriptionDate'],
+            required: true,
+          },
           {
             model: db.customer,
             attributes: ['fullName', 'email'],
@@ -40,7 +51,7 @@ const db = require('../models'),
         ],
         offset: +start,
         limit: +limit,
-        order: [['subscriptionDate', 'DESC']],
+        order: [['expiredDate', 'DESC']],
       })
         .then(async (data) => {
           const count = await Subscription.count();

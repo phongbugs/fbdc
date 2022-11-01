@@ -119,6 +119,10 @@ Ext.onReady(function () {
           //   'expiredDate',
           //   record.get('expiredDate').split('/').reverse().join('-')
           // );
+          // record.set(
+          //   'subscriptionDate',
+          //   record.get('subscriptionDate').split('/').reverse().join('-')
+          // );
           customerForm.loadRecord(record);
           customerForm.query('#btnResetCustomerForm')[0].setDisabled(true);
           submitButton = customerForm.query('#btnSubmitCustomerForm')[0];

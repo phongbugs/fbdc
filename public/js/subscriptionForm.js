@@ -1,11 +1,50 @@
+// this is the model we will be using in the store
+Ext.define('SubscriptionDetail', {
+  extend: 'Ext.data.Model',
+  fields: [
+    { name: 'subscriptionId', type: 'int' },
+    { name: 'amount', type: 'int' },
+    { name: 'subscriptionDate', type: 'date' },
+  ],
+});
+
+// note how we set the 'root' in the reader to match the data structure above
+var storeSubscriptionDetail = Ext.create('Ext.data.Store', {
+  autoLoad: true,
+  model: 'SubscriptionDetail',
+  data: [
+    {
+      subscriptionId: 811,
+      amount: 75000,
+      subscriptionDate: '1970-04-30T11:05:38.000Z',
+    },
+    {
+      subscriptionId: 811,
+      amount: 300000,
+      subscriptionDate: '2002-02-09T15:33:16.000Z',
+    },
+    {
+      subscriptionId: 811,
+      amount: 50000,
+      subscriptionDate: '1947-12-12T05:23:26.000Z',
+    },
+  ],
+  proxy: {
+    type: 'memory',
+    reader: {
+      type: 'json',
+    },
+  },
+});
+
 var subscriptionForm = Ext.create('Ext.form.Panel', {
   id: 'subscriptionForm',
   bodyStyle: 'background:transparent',
   title: 'Thông tin đăng kí',
-  icon:
-    'https://icons.iconarchive.com/icons/hopstarter/sleek-xp-basic/16/Document-Write-icon.png',
+  icon: 'https://icons.iconarchive.com/icons/hopstarter/sleek-xp-basic/16/Document-Write-icon.png',
   bodyPadding: 15,
-  width: 450,
+  width: 500,
+  height: 500,
   layout: 'anchor',
   defaults: {
     anchor: '100%',
@@ -43,6 +82,7 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
   defaultType: 'textfield',
   defaultStyle: {
     height: '50px',
+    editable: false,
   },
   items: [
     {
@@ -66,32 +106,102 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
     },
     {
       fieldLabel: 'Số tiền',
-      name: 'amount',
-      allowBlank: false,
+      name: 'totalAmount',
     },
     {
-      //xtype: 'datefield',
+      fieldLabel: 'Số ngày',
+      name: 'totalDay',
+      editable: false,
+    },
+    {
+      xtype: 'datefield',
       fieldLabel: 'Ngày đăng kí',
       name: 'subscriptionDate',
-      allowBlank: false,
-      //value: new Date(),
       format: 'd/m/Y',
-      disabled:true
+      disabled: true,
     },
     {
       xtype: 'datefield',
       fieldLabel: 'Ngày hết hạn',
       name: 'expiredDate',
-      allowBlank: false,
-      //value: new Date(),
       format: 'd/m/Y',
-      disabled:true
+      disabled: true,
+    },
+    {
+      fieldLabel: 'Trạng thái',
+      name: 'status',
+      editable: false,
+    },
+    {
+      xtype: 'gridpanel',
+      itemId: 'subscriptionDetailGrid',
+      store: storeSubscriptionDetail,
+      width: 500,
+      height: 200,
+      frame: false,
+      header: false,
+      tools: [
+        {
+          type: 'close',
+          handler: () => domainGrid.setHidden(true),
+        },
+      ],
+      plugins: ['cellediting'],
+      plugins: [
+        {
+          ptype: 'cellediting',
+          clicksToEdit: 1,
+        },
+      ],
+      viewConfig: {
+        loadMask: true,
+      },
+      listeners: {
+        // beforeedit: function (editor, context) {},
+        show: (grid) => {},
+        hide: () => Ext.getCmp('gridWLs').setDisabled(false),
+      },
+      columns: [
+        //new Ext.grid.RowNumberer({ dataIndex: 'no', text: 'No.', width: 60 }),
+        {
+          xtype: 'rownumberer',
+          dataIndex: 'id',
+          text: 'STT',
+          width: 60,
+        },
+        {
+          text: 'Số tiền',
+          width: 100,
+          dataIndex: 'amount',
+          renderer: (v) => (v ? formatCash(v.toString()) + ' VND' : ''),
+        },
+        {
+          text: 'Ngày đăng ký',
+          width: 120,
+          dataIndex: 'subscriptionDate',
+          renderer: (v) => new Date(v).toLocaleDateString(),
+        },
+        {
+          text: 'Ngày hết hạn',
+          width: 120,
+          dataIndex: 'expiredDate',
+          renderer: (value, metaData, record) =>
+            expiredDate(new Date(record.get('subscriptionDate'))),
+        },
+        {
+          xtype: 'actioncolumn',
+          text: 'Xóa',
+          tooltip: 'Xóa đăng ký',
+          width: 60,
+          iconCls: 'deleteCls',
+          handler: (grid, rowIndex, colIndex, item, e, record) => null,
+        },
+      ],
     },
   ],
   buttons: [
     {
-      icon:
-        'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-8/16/Refresh-icon.png',
+      icon: 'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-8/16/Refresh-icon.png',
       text: 'Làm mới',
       handler: function () {
         this.up('form').getForm().reset();
