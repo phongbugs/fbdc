@@ -24,25 +24,25 @@ let Groups,
   actions = {
     create: {
       name: 'create',
-      label: 'Đăng ký mới',
+      label: 'New supscription',
       iconCls: 'add',
       method: 'POST',
       icon: 'https://icons.iconarchive.com/icons/icojam/blue-bits/16/user-add-icon.png',
     },
     update: {
       name: 'update',
-      label: 'Cập nhật',
+      label: 'Update',
       iconCls: 'update',
       method: 'PUT',
       icon: 'https://icons.iconarchive.com/icons/custom-icon-design/pretty-office-9/16/edit-file-icon.png',
     },
     delete: {
       name: 'delete',
-      label: 'Xóa',
+      label: 'Delete',
       icon: 'https://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/16/Actions-edit-delete-icon.png',
     },
-    find: { name: 'find', label: 'Tìm kiếm', icon: '' },
-    logout: { name: 'logout', label: 'Đăng xuất', icon: '' },
+    find: { name: 'find', label: 'Find', icon: '' },
+    logout: { name: 'logout', label: 'Logout', icon: '' },
   },
   subscriptionFormAction = actions.create,
   getCmp = function (query) {
@@ -55,7 +55,25 @@ let Groups,
       .reduce((prev, next, index) => {
         return (index % 3 ? next : next + '.') + prev;
       });
+  },
+  isExpiredDate = (supscriptionDate, amount) => {
+    let currentDate = new Date(),
+      expiredDate = calcExpiredDate(supscriptionDate, amount);
+    return expiredDate.getTime() - currentDate.getTime() < 0;
   };
+formatFormRecord = (formRecord) => {
+  formRecord.set(
+    'totalAmount',
+    formatCash(formRecord.get('totalAmount').toString())
+  );
+  let isExpired = isExpiredDate(
+    formRecord.get('subscriptionDate'),
+    formRecord.get('totalAmount')
+  );
+  log(isExpired);
+  formRecord.set('status', isExpired ? 'Expired' : 'Active');
+  getCmp('#txtStatus').fieldCls = isExpired ? 'expired' : 'active';
+};
 Ext.onReady(function () {
   Ext.define('Subscription', {
     extend: 'Ext.data.Model',
@@ -71,7 +89,7 @@ Ext.onReady(function () {
       'status',
     ],
   });
-  let storesubscription = Ext.create('Ext.data.Store', {
+  let storeSubscription = Ext.create('Ext.data.Store', {
     model: 'Subscription',
     proxy: {
       type: 'ajax',
@@ -112,7 +130,7 @@ Ext.onReady(function () {
     listeners: {
       load: function (_, records, successful, operation, eOpts) {
         data = records;
-        Groups = storesubscription.getGroups();
+        Groups = storeSubscription.getGroups();
       },
     },
     autoLoad: true,
@@ -121,7 +139,7 @@ Ext.onReady(function () {
   let subscriptionGrid = Ext.create('Ext.grid.Panel', {
     renderTo: 'app',
     itemId: 'subscriptionGrid',
-    store: storesubscription,
+    store: storeSubscription,
     width: Ext.getBody().getViewSize().width,
     height: Ext.getBody().getViewSize().height,
     icon: 'https://icons.iconarchive.com/icons/google/noto-emoji-travel-places/16/42491-hospital-icon.png',
@@ -142,29 +160,28 @@ Ext.onReady(function () {
     listeners: {
       viewready: (_) => {
         loadScript('js/subscriptionForm.js');
-        loadScript('js/subscriptionDetailGrid.js');
       },
       celldblclick(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
         subscriptionGrid.setDisabled(true);
         subscriptionFormAction = actions.update;
         subscriptionForm.show();
-        //fix binding betwwen datefield & datecolumn
-        // record.set(
-        //   'expiredDate',
-        //   record.get('expiredDate').split('/').reverse().join('-')
-        // );
-        subscriptionDetailGridData = getCmp('#subscriptionGrid')
-          .getStore()
-          .getAt(rowIndex)
-          .get('SubscriptionDetails');
-        storeSubscriptionDetail.loadData(subscriptionDetailGridData);
-        subscriptionForm.loadRecord(record);
+
+        let formRecord = _.clone(record);
+        formatFormRecord(formRecord);
+        subscriptionForm.loadRecord(formRecord);
         subscriptionForm
           .query('#btnResetsubscriptionForm')[0]
           .setDisabled(true);
         submitButton = subscriptionForm.query('#btnSubmitsubscriptionForm')[0];
         submitButton.setText(actions.update.label);
         submitButton.setIcon(actions.update.icon);
+
+        // Load data on grid
+        subscriptionDetailGridData = getCmp('#subscriptionGrid')
+          .getStore()
+          .getAt(rowIndex)
+          .get('SubscriptionDetails');
+        storeSubscriptionDetail.loadData(subscriptionDetailGridData);
       },
     },
     tbar: [
@@ -179,17 +196,43 @@ Ext.onReady(function () {
             .getSelectionModel()
             .getSelected()
             .getRange();
+          log(seletedRecords);
+          var arrSubscriptionDetailIds = seletedRecords.map((record) =>
+            record.data.SubscriptionDetails.map((s) => s.id)
+          );
+          let subscriptionDetailIds = [];
+          arrSubscriptionDetailIds.forEach((arr) => {
+            subscriptionDetailIds = [...arr, ...subscriptionDetailIds];
+          });
+          log(arrSubscriptionDetailIds);
+          log(subscriptionDetailIds);
           Ext.Msg.confirm(
             'Xác nhận',
             'Bạn muốn xóa ' + seletedRecords.length + ' đăng kí này ?',
             (buttonId) => {
               if (buttonId === 'yes') {
-                var ids = seletedRecords.map((record) => record.data.id);
                 Ext.Ajax.request({
                   method: 'DELETE',
-                  url: hostAPI + '/subscription/delete/' + ids.toString(),
+                  url:
+                    hostAPI +
+                    '/subscription-detail/delete/' +
+                    subscriptionDetailIds.toString(),
                   success: function (response) {
-                    storesubscription.remove(seletedRecords);
+                    var ids = seletedRecords.map((record) => record.data.id);
+                    Ext.Ajax.request({
+                      method: 'DELETE',
+                      url: hostAPI + '/subscription/delete/' + ids.toString(),
+                      params: {
+                        subscriptionDetailIds: subscriptionDetailIds.toString(),
+                      },
+                      success: function (response) {
+                        storeSubscription.remove(seletedRecords);
+                        getCmp('#subscriptionGrid').getStore().load();
+                      },
+                      failure: function (response) {
+                        alert(JSON.stringify(response));
+                      },
+                    });
                   },
                   failure: function (response) {
                     alert(JSON.stringify(response));
@@ -207,8 +250,8 @@ Ext.onReady(function () {
         //text: 'Nạp lại danh sách',
         listeners: {
           click: () => {
-            storesubscription.clearFilter();
-            storesubscription.reload();
+            storeSubscription.clearFilter();
+            storeSubscription.reload();
           },
         },
       },
@@ -232,6 +275,8 @@ Ext.onReady(function () {
             )[0];
             submitButton.setText(subscriptionFormAction.label);
             submitButton.setIcon(subscriptionFormAction.icon);
+
+            storeSubscriptionDetail.loadData([]);
           },
         },
       },
@@ -256,11 +301,11 @@ Ext.onReady(function () {
         listeners: {
           change: (_, val) => {
             if (val !== 'default') {
-              storesubscription.setGroupField(val);
-              Groups = storesubscription.getGroups();
-              storesubscription.loadData(data);
+              storeSubscription.setGroupField(val);
+              Groups = storeSubscription.getGroups();
+              storeSubscription.loadData(data);
             } else {
-              storesubscription.setGroupField(undefined);
+              storeSubscription.setGroupField(undefined);
             }
           },
         },
@@ -286,7 +331,7 @@ Ext.onReady(function () {
         icon: 'https://icons.iconarchive.com/icons/zerode/plump/16/Search-icon.png',
         listeners: {
           click: () => {
-            storesubscription.clearFilter();
+            storeSubscription.clearFilter();
             var searchValue = Ext.getCmp('txtsubscriptionFindField').getValue();
             if (!!searchValue) {
               var filters = [
@@ -321,7 +366,7 @@ Ext.onReady(function () {
                   },
                 }),
               ];
-              storesubscription.filter(filters);
+              storeSubscription.filter(filters);
             }
           },
         },
@@ -330,14 +375,14 @@ Ext.onReady(function () {
     bbar: {
       xtype: 'pagingtoolbar',
       displayInfo: true,
-      store: storesubscription,
-      displayMsg: 'Dữ liệu từ {0} - {1} of {2}',
-      emptyMsg: 'Không có dữ liệu',
+      store: storeSubscription,
+      displayMsg: 'Data from {0} -> {1} of {2}',
+      emptyMsg: 'No display of data',
       plugins: [
         {
           ptype: 'pagingtoolbarresizer',
           options: [25, 30, 50, 100, 125, 150, 200, 400, 500, 700, 1000],
-          displayMsg: 'Số lượng dòng trên một trang',
+          displayMsg: "Record's Quantity Per Page",
         },
       ],
     },
@@ -355,7 +400,7 @@ Ext.onReady(function () {
         hidden: true,
       },
       {
-        text: 'Tên người dùng',
+        text: 'Full Name',
         width: 180,
         dataIndex: 'fullName',
       },
@@ -365,39 +410,38 @@ Ext.onReady(function () {
         dataIndex: 'email',
       },
       {
-        text: 'Số tiền',
+        text: 'Total Amount',
         width: 120,
         dataIndex: 'totalAmount',
-        renderer: (v) => (v ? formatCash(v.toString()) + ' VND' : ''),
+        renderer: (v) => (v ? formatCash(v.toString()) : ''),
       },
       {
-        text: 'Số ngày',
+        text: 'Total Day',
         width: 90,
         dataIndex: 'totalDay',
       },
       {
-        text: 'Ngày đăng ký',
+        text: 'Subscription Date',
         width: 120,
         dataIndex: 'subscriptionDate',
         renderer: (v) => v.toLocaleDateString('vi-VN'),
       },
       {
-        text: 'Ngày hết hạn',
+        text: 'Expired Date',
         width: 120,
         dataIndex: 'expiredDate',
         renderer: (v) => v.toLocaleDateString('vi-VN'),
       },
       {
-        text: 'Trạng thái',
+        text: 'Status',
         width: 100,
         dataIndex: 'status',
-        renderer: (v) => (v ? 'Còn hạng' : 'Hết hạng'),
+        renderer: (v) => (v ? 'Active' : 'Expired'),
       },
     ],
     viewConfig: {
       getRowClass: function (record, index, rowParams) {
-        //console.log(record.SubscriptionDetails());
-        return !record.get('status') ? 'expired' : 'active';
+        return !record.get('status') ? 'expired' : '';
       },
     },
   });

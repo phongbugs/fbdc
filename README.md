@@ -160,7 +160,10 @@
     autoLoad: true,
   });
     ```
-
+ - Clone Object
+   - ```_cloneDeep``` => successfully clone formRecord from gridRecord
+   - ```{...object} || Object,assign({}, object)```
+   - ```structClone(object)```
 ## Common Bugs
 
 - Route is not specify (wrong inside function)

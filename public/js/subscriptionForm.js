@@ -18,16 +18,6 @@ var storeSubscriptionDetail = Ext.create('Ext.data.Store', {
       amount: 75000,
       subscriptionDate: '1970-04-30T11:05:38.000Z',
     },
-    {
-      subscriptionId: 811,
-      amount: 300000,
-      subscriptionDate: '2002-02-09T15:33:16.000Z',
-    },
-    {
-      subscriptionId: 811,
-      amount: 50000,
-      subscriptionDate: '1947-12-12T05:23:26.000Z',
-    },
   ],
   proxy: {
     type: 'memory',
@@ -36,14 +26,38 @@ var storeSubscriptionDetail = Ext.create('Ext.data.Store', {
     },
   },
 });
-
+var getDayQuantity = (amount) => {
+  var day = 0;
+  switch (amount) {
+    case 25000:
+      day = 30;
+      break;
+    case 50000:
+      day = 60;
+      break;
+    case 75000:
+      day = 90;
+      break;
+    case 150000:
+      day = 180;
+      break;
+    case 300000:
+      day = 360;
+      break;
+  }
+  return day;
+};
+var calcExpiredDate = (subscriptionDate, amount) => {
+  var days = getDayQuantity(amount);
+  return new Date(subscriptionDate.getTime() + days * 24 * 3600 * 1000);
+};
 var subscriptionForm = Ext.create('Ext.form.Panel', {
   id: 'subscriptionForm',
   bodyStyle: 'background:transparent',
-  title: 'Thông tin đăng kí',
+  title: 'Subcription Info',
   icon: 'https://icons.iconarchive.com/icons/hopstarter/sleek-xp-basic/16/Document-Write-icon.png',
   bodyPadding: 15,
-  width: 500,
+  width: 600,
   height: 500,
   layout: 'anchor',
   defaults: {
@@ -82,7 +96,6 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
   defaultType: 'textfield',
   defaultStyle: {
     height: '50px',
-    editable: false,
   },
   items: [
     {
@@ -91,9 +104,10 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       allowBlank: false,
     },
     {
-      fieldLabel: 'Tên',
+      fieldLabel: 'Full Name',
       name: 'fullName',
       allowBlank: false,
+      editable: false,
     },
     {
       fieldLabel: 'Email',
@@ -103,35 +117,59 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       hideTrigger: true,
       keyNavEnabled: false,
       mouseWheelEnabled: false,
+      editable: false,
     },
     {
-      fieldLabel: 'Số tiền',
+      fieldLabel: 'Amount',
       name: 'totalAmount',
+      editable: false,
     },
     {
-      fieldLabel: 'Số ngày',
+      fieldLabel: "Day's Quantity",
       name: 'totalDay',
       editable: false,
     },
     {
       xtype: 'datefield',
-      fieldLabel: 'Ngày đăng kí',
+      fieldLabel: 'Subcribe Date',
       name: 'subscriptionDate',
       format: 'd/m/Y',
-      disabled: true,
+      editable: false,
+      readOnly: true,
     },
     {
       xtype: 'datefield',
-      fieldLabel: 'Ngày hết hạn',
+      fieldLabel: 'Expired Date',
       name: 'expiredDate',
       format: 'd/m/Y',
-      disabled: true,
+      editable: false,
+      readOnly: true,
     },
     {
-      fieldLabel: 'Trạng thái',
+      fieldLabel: 'Status',
       name: 'status',
+      itemId: 'txtStatus',
       editable: false,
+      //fieldCls: 'active',
     },
+    // {
+    //   xtype: 'combo',
+    //   fieldLabel: 'Status',
+    //   store: new Ext.data.ArrayStore({
+    //     fields: ['statusValue', 'statusDisplay'],
+    //     data: [
+    //       [true, 'Active'],
+    //       [false, 'Expired'],
+    //     ],
+    //   }),
+    //   displayField: 'statusDisplay',
+    //   valueField: 'statusValue',
+    //   name: 'status',
+    //   itemId: 'cbbStatus',
+    //   editable: false,
+    //   submitValue: false,
+    //   fieldCls:'expired'
+    // },
     {
       xtype: 'gridpanel',
       itemId: 'subscriptionDetailGrid',
@@ -146,13 +184,6 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
           handler: () => domainGrid.setHidden(true),
         },
       ],
-      plugins: ['cellediting'],
-      plugins: [
-        {
-          ptype: 'cellediting',
-          clicksToEdit: 1,
-        },
-      ],
       viewConfig: {
         loadMask: true,
       },
@@ -161,44 +192,124 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
         show: (grid) => {},
         hide: () => Ext.getCmp('gridWLs').setDisabled(false),
       },
+      tbar: [
+        {
+          xtype: 'button',
+          text: 'Add',
+          itemId: '#btnAddSubscriptionDetail',
+          icon: 'https://icons.iconarchive.com/icons/awicons/vista-artistic/16/coin-add-icon.png',
+          listeners: {
+            click: () => {
+              storeSubscriptionDetail.clearFilter();
+              storeSubscriptionDetail.reload();
+            },
+          },
+        },
+      ],
       columns: [
-        //new Ext.grid.RowNumberer({ dataIndex: 'no', text: 'No.', width: 60 }),
         {
           xtype: 'rownumberer',
           dataIndex: 'id',
-          text: 'STT',
-          width: 60,
+          text: 'No',
+          width: 55,
         },
         {
-          text: 'Số tiền',
+          text: 'Amount',
           width: 100,
           dataIndex: 'amount',
-          renderer: (v) => (v ? formatCash(v.toString()) + ' VND' : ''),
+          renderer: (v) => (v ? formatCash(v.toString()) : ''),
         },
         {
-          text: 'Ngày đăng ký',
-          width: 120,
+          text: 'Days',
+          width: 60,
+          dataIndex: 'amount',
+          renderer: (v) => (v ? getDayQuantity(v) : 0),
+        },
+        {
+          text: 'Subcribe Date',
+          width: 110,
           dataIndex: 'subscriptionDate',
           renderer: (v) => new Date(v).toLocaleDateString(),
         },
         {
-          text: 'Ngày hết hạn',
-          width: 120,
-          dataIndex: 'expiredDate',
+          text: 'Expired Date',
+          width: 105,
           renderer: (value, metaData, record) =>
-            expiredDate(new Date(record.get('subscriptionDate'))),
+            calcExpiredDate(
+              new Date(record.get('subscriptionDate')),
+              record.get('amount')
+            ).toLocaleDateString('vi-VN'),
+        },
+        {
+          text: 'Status',
+          width: 65,
+          renderer: (value, metaData, record) => {
+            try {
+              let currentDate = new Date(),
+                expiredDate = calcExpiredDate(
+                  new Date(record.get('subscriptionDate')),
+                  record.get('amount')
+                );
+              return expiredDate.getTime() - currentDate.getTime() < 0
+                ? 'Expired'
+                : 'Active';
+            } catch (error) {
+              log(error);
+            }
+          },
         },
         {
           xtype: 'actioncolumn',
-          text: 'Xóa',
-          tooltip: 'Xóa đăng ký',
-          width: 60,
-          iconCls: 'deleteCls',
-          handler: (grid, rowIndex, colIndex, item, e, record) => null,
+          width: 45,
+          tooltip: 'Xóa dòng này',
+          align: 'center',
+          text: 'Del',
+          items: [
+            {
+              icon: actions.delete.icon,
+              handler: function (grid, rowIndex, colIndex, item, e, record) {
+                Ext.Msg.confirm(
+                  'Xác nhận',
+                  'Bạn muốn xóa đăng kí này ?',
+                  (buttonId) => {
+                    if (buttonId === 'yes') {
+                      let store = grid.getStore();
+                      var recordIndex = store.indexOf(record);
+                      var id = grid.getStore().getAt(recordIndex).get('id');
+                      Ext.Ajax.request({
+                        method: 'DELETE',
+                        url: hostAPI + '/subscription-detail/delete/' + id,
+                        success: function (response) {
+                          store.removeAt(recordIndex);
+                          getCmp('#subscriptionGrid').getStore().load();
+                        },
+                        failure: function (response) {
+                          alert(JSON.stringify(response));
+                        },
+                      });
+                    }
+                  }
+                );
+              },
+            },
+          ],
         },
       ],
+      viewConfig: {
+        getRowClass: function (record, index, rowParams) {
+          var currentDate = new Date(),
+            expiredDate = calcExpiredDate(
+              new Date(record.get('subscriptionDate')),
+              record.get('amount')
+            );
+          return expiredDate.getTime() - currentDate.getTime() < 0
+            ? 'expiredSubscriptionDetail'
+            : 'active';
+        },
+      },
     },
   ],
+
   buttons: [
     {
       icon: 'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-8/16/Refresh-icon.png',
