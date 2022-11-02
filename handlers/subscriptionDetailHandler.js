@@ -1,5 +1,5 @@
 const db = require('../models'),
-  Subscription = db.subscription,
+  SubscriptionDetail = db.subscriptionDetail,
   log = console.log,
   create = (req, res) => {
     try {
@@ -10,7 +10,7 @@ const db = require('../models'),
         phone: body.phone,
       };
       log(subscription);
-      Subscription.create(subscription)
+      SubscriptionDetail.create(subscriptionDetail)
         .then((data) => {
           res.send({ success: true, data: data });
         })
@@ -29,7 +29,7 @@ const db = require('../models'),
   list = (req, res) => {
     try {
       let { start, limit } = req.query;
-      Subscription.findAll({
+      SubscriptionDetail.findAll({
         attributes: [
           'id',
           'customerId',
@@ -40,7 +40,7 @@ const db = require('../models'),
         include: [
           {
             model: db.subscriptionDetail,
-            attributes: ['id', 'subscriptionId', 'amount', 'subscriptionDate'],
+            attributes: ['subscriptionId', 'amount', 'subscriptionDate'],
             required: true,
           },
           {
@@ -71,11 +71,7 @@ const db = require('../models'),
   },
   update = (req, res) => {
     const id = req.body.id;
-    // req.body.re_examination_date = req.body.re_examination_date
-    //   .split('/')
-    //   .reverse()
-    //   .join('-');
-    Subscription.update(req.body, {
+    SubscriptionDetail.update(req.body, {
       where: { id: id },
     })
       .then((num) => {
@@ -83,7 +79,7 @@ const db = require('../models'),
         if (num[0] === 1) {
           res.send({
             success: true,
-            message: 'subscription was updated successfully.',
+            message: 'subscription detail was updated successfully.',
           });
         } else {
           res.send({
@@ -95,32 +91,32 @@ const db = require('../models'),
       .catch((err) => {
         res.status(500).send({
           message:
-            'Error updating subscription with id=' + id + ' ' + err.message,
+            'Error updating subscription detail with id=' + id + ' ' + err.message,
         });
       });
   },
-  deleteSubscription = (req, res) => {
+  deleteSubscriptionDetail = (req, res) => {
     const ids = req.params.ids.split(',').map((e) => +e);
-    Subscription.destroy({
+    SubscriptionDetail.destroy({
       where: { id: ids },
     })
       .then((num) => {
         if (num == 1) {
           res.send({
             success: true,
-            message: 'subscription was deleted successfully.',
+            message: 'subscription detail was deleted successfully.',
           });
         } else {
           res.send({
             success: false,
-            message: `Cannot delete subscription with id=${ids.toString()}. Maybe Tutorial was not found!`,
+            message: `Cannot delete subscription detail with id=${ids.toString()}. Maybe Tutorial was not found!`,
           });
         }
       })
       .catch((err) => {
         res.status(500).send({
           success: false,
-          message: 'Could not delete subscription with ids=' + ids.toString(),
+          message: 'Could not delete subscription detail with ids=' + ids.toString(),
         });
       });
   };
@@ -129,5 +125,5 @@ module.exports = {
   create,
   list,
   update,
-  deleteSubscription,
+  deleteSubscriptionDetail,
 };

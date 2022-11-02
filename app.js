@@ -8,6 +8,7 @@ var indexRouter = require('./routes/index');
 var userRouter = require('./routes/user');
 var customerRouter = require('./routes/customer');
 var subscriptionRouter = require('./routes/subscription');
+var subscriptionDetailRouter = require('./routes/subscriptiondetail');
 
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -32,6 +33,7 @@ app.use('/', indexRouter);
 app.use('/user', userRouter);
 app.use('/customer', customerRouter);
 app.use('/subscription', subscriptionRouter);
+app.use('/subscription-detail', subscriptionDetailRouter);
 
 // catch 404 and forward to error handler
 app.use(function (_, _, next) {
