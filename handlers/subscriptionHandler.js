@@ -69,6 +69,58 @@ const db = require('../models'),
       log(err);
     }
   },
+  find = (req, res) => {
+    let { searchValue } = req.query;
+    log(searchValue);
+    const Op = db.Sequelize.Op;
+    Promise.all([
+      Subscription.findAll({
+        include: [
+          {
+            model: db.subscriptionDetail,
+            attributes: ['id', 'subscriptionId', 'amount', 'subscriptionDate'],
+            required: true,
+          },
+          {
+            model: db.customer,
+            attributes: ['fullName', 'email'],
+            where: {
+              email: { [Op.like]: '%' + searchValue + '%' },
+            },
+            required: true,
+          },
+        ],
+      }),
+      Subscription.findAll({
+        include: [
+          {
+            model: db.subscriptionDetail,
+            attributes: ['id', 'subscriptionId', 'amount', 'subscriptionDate'],
+            required: true,
+          },
+          {
+            model: db.customer,
+            attributes: ['fullName', 'email'],
+            where: {
+              fullName: { [Op.like]: '%' + searchValue + '%' },
+            },
+            required: true,
+          },
+        ],
+      }),
+    ])
+      .then(async (data) => {
+        data = data.flat();
+        res.send({ records: data, totalCount: data.length, success: true });
+      })
+      .catch((err) => {
+        res.status(500).send({
+          success: false,
+          message:
+            err.message || 'Some error occurred while retrieving customer.',
+        });
+      });
+  },
   update = (req, res) => {
     const id = req.body.id;
     Subscription.update(req.body, {
@@ -124,6 +176,7 @@ const db = require('../models'),
 module.exports = {
   create,
   list,
+  find,
   update,
   deleteSubscription,
 };

@@ -30,9 +30,7 @@ const db = require('../models'),
     Customer.findAll({
       offset: +start,
       limit: +limit,
-      order: [
-        ['createdAt', 'DESC'],
-      ],
+      order: [['createdAt', 'DESC']],
     })
       .then(async (data) => {
         const count = await Customer.count();
@@ -46,12 +44,41 @@ const db = require('../models'),
         });
       });
   },
+  find = (req, res) => {
+    let { searchValue } = req.query;
+    log(searchValue);
+    const Op = db.Sequelize.Op;
+    Promise.all([
+      Customer.findAll({
+        where: {
+          email: { [Op.like]: '%' + searchValue + '%' },
+        },
+      }),
+      Customer.findAll({
+        where: {
+          fullName: { [Op.like]: '%' + searchValue + '%' },
+        },
+      }),
+      Customer.findAll({
+        where: {
+          phone: { [Op.like]: '%' + searchValue + '%' },
+        },
+      }),
+    ])
+      .then(async (data) => {
+        data = data.flat();
+        res.send({ records: data, totalCount: data.length, success: true });
+      })
+      .catch((err) => {
+        res.status(500).send({
+          success: false,
+          message:
+            err.message || 'Some error occurred while retrieving customer.',
+        });
+      });
+  },
   update = (req, res) => {
     const id = req.body.id;
-    // req.body.re_examination_date = req.body.re_examination_date
-    //   .split('/')
-    //   .reverse()
-    //   .join('-');
     Customer.update(req.body, {
       where: { id: id },
     })
@@ -104,6 +131,7 @@ const db = require('../models'),
 module.exports = {
   create,
   list,
+  find,
   update,
   deleteCustomer,
 };

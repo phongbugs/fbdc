@@ -132,16 +132,8 @@ Ext.onReady(function () {
     },
     listeners: {
       load: function (_, records, successful, operation, eOpts) {
-        // records = records.map((record) => {
-        //   //let status = record.status ? 'Active' : 'Expired';
-        //   //record.set('status', status);
-        //   //log(record);
-        //   return record;
-        // });
-
         data = records;
         Groups = storeSubscription.getGroups();
-        log(Groups);
       },
     },
     autoLoad: true,
@@ -162,8 +154,16 @@ Ext.onReady(function () {
       listeners: {
         selectionchange: function (model, selections) {
           var btnDelete = getCmp('#btnDelete');
-          if (selections.length > 0) btnDelete.setDisabled(false);
-          else btnDelete.setDisabled(true);
+          var btnSubscribe = getCmp('#btnSubscribe');
+          if (selections.length > 0) {
+            btnDelete.setDisabled(false);
+            if (selections.length === 1) {
+              btnSubscribe.setDisabled(false);
+            } else btnSubscribe.setDisabled(true);
+          } else {
+            btnDelete.setDisabled(true);
+            btnSubscribe.setDisabled(true);
+          }
         },
       },
     }),
@@ -178,15 +178,9 @@ Ext.onReady(function () {
         subscriptionFormAction = actions.update;
         subscriptionForm.show();
 
-        let formRecord = record; // _.clone(record);
+        let formRecord = record;
         formatFormRecord(formRecord);
         subscriptionForm.loadRecord(formRecord);
-        subscriptionForm
-          .query('#btnResetsubscriptionForm')[0]
-          .setDisabled(true);
-        submitButton = subscriptionForm.query('#btnSubmitsubscriptionForm')[0];
-        submitButton.setText(actions.update.label);
-        submitButton.setIcon(actions.update.icon);
 
         // Load data on grid
         subscriptionDetailGridData = getCmp('#subscriptionGrid')
@@ -261,36 +255,45 @@ Ext.onReady(function () {
       },
       {
         xtype: 'button',
-        id: 'btnRefresh',
-        icon: 'https://icons.iconarchive.com/icons/graphicloads/100-flat/16/reload-icon.png',
-        //text: 'Nạp lại danh sách',
+        itemId: 'btnClear',
+        tooltip:'Xóa tạm dữ liệu',
+        icon: 'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-10/16/Trash-icon.png',
         listeners: {
           click: () => {
-            storeSubscription.clearFilter();
-            storeSubscription.reload();
+            storeSubscription.removeAll();
           },
         },
       },
       {
         xtype: 'button',
-        id: 'btnAdd',
-        icon: 'https://icons.iconarchive.com/icons/icojam/blue-bits/16/user-add-icon.png',
+        itemId: 'btnRefresh',
+        icon: 'https://icons.iconarchive.com/icons/graphicloads/100-flat/16/reload-icon.png',
+        listeners: {
+          click: () => {
+            storeSubscription.clearFilter();
+            storeSubscription
+              .getProxy()
+              .setConfig('url', ['/subscription/list/']);
+            storeSubscription.load();
+          },
+        },
+      },
+      {
+        xtype: 'button',
+        itemId: 'btnSubscribe',
+        disabled: true,
+        icon: 'https://icons.iconarchive.com/icons/fatcow/farm-fresh/16/coins-add-icon.png',
         text: actions.create.label,
         listeners: {
           click: () => {
             subscriptionGrid.setDisabled(true);
-            subscriptionFormAction = actions.create;
+            var seletedRecord = subscriptionGrid
+              .getSelectionModel()
+              .getSelected()
+              .getAt(0);
+            seletedRecord.set('subscriptionDate', new Date());
+            subscriptionAddForm.loadRecord(seletedRecord);
             subscriptionAddForm.show();
-            subscriptionAddForm.reset();
-            resetButton = subscriptionAddForm.query(
-              '#btnResetSubscriptionAddForm'
-            )[0];
-            resetButton.setDisabled(false);
-            submitButton = subscriptionAddForm.query(
-              '#btnSubmitSubscriptionAddForm'
-            )[0];
-            submitButton.setText(subscriptionFormAction.label);
-            submitButton.setIcon(subscriptionFormAction.icon);
           },
         },
       },
@@ -350,29 +353,10 @@ Ext.onReady(function () {
             storeSubscription.clearFilter();
             var searchValue = getCmp('#txtSubscriptionFindField').getValue();
             if (!!searchValue) {
-              var filters = [
-                new Ext.util.Filter({
-                  filterFn: function (item) {
-                    return (
-                      item
-                        .get('fullName')
-                        .toLowerCase()
-                        .indexOf(searchValue.toLowerCase()) > -1 ||
-                      item
-                        .get('email')
-                        .toLowerCase()
-                        .indexOf(searchValue.toLowerCase()) > -1 ||
-                      item
-                        .get('subscriptionDate')
-                        .indexOf(searchValue) > -1 ||
-                      item
-                        .get('expiredDate')
-                        .indexOf(searchValue) > -1
-                    );
-                  },
-                }),
-              ];
-              storeSubscription.filter(filters);
+              var proxy = storeSubscription.getProxy();
+              proxy.setConfig('url', ['/subscription/find/']);
+              proxy.setConfig('extraParams', { searchValue });
+              storeSubscription.load();
             }
           },
         },
@@ -428,7 +412,7 @@ Ext.onReady(function () {
       },
       {
         text: 'Subscription Date',
-        width: 120,
+        width: 160,
         dataIndex: 'subscriptionDate',
         renderer: (v) => v.toLocaleDateString('vi-VN'),
       },

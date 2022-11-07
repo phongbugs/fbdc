@@ -79,7 +79,7 @@ Ext.onReady(function () {
       load: function (_, records, successful, operation, eOpts) {
         data = records;
         Groups = storeCustomer.getGroups();
-        log(Groups)
+        log(Groups);
       },
     },
     autoLoad: true,
@@ -115,15 +115,7 @@ Ext.onReady(function () {
           customerGrid.setDisabled(true);
           customerFormAction = actions.update;
           customerForm.show();
-          //fix binding betwwen datefield & datecolumn
-          // record.set(
-          //   'expiredDate',
-          //   record.get('expiredDate').split('/').reverse().join('-')
-          // );
-          // record.set(
-          //   'subscriptionDate',
-          //   record.get('subscriptionDate').split('/').reverse().join('-')
-          // );
+
           customerForm.loadRecord(record);
           customerForm.query('#btnResetCustomerForm')[0].setDisabled(true);
           submitButton = customerForm.query('#btnSubmitCustomerForm')[0];
@@ -169,11 +161,11 @@ Ext.onReady(function () {
         xtype: 'button',
         id: 'btnRefresh',
         icon: 'https://icons.iconarchive.com/icons/graphicloads/100-flat/16/reload-icon.png',
-        //text: 'Nạp lại danh sách',
         listeners: {
           click: () => {
             storeCustomer.clearFilter();
-            storeCustomer.reload();
+            storeCustomer.getProxy().setConfig('url', ['/customer/list/']);
+            storeCustomer.load();
           },
         },
       },
@@ -254,34 +246,10 @@ Ext.onReady(function () {
             storeCustomer.clearFilter();
             var searchValue = Ext.getCmp('txtCustomerFindField').getValue();
             if (!!searchValue) {
-              var filters = [
-                new Ext.util.Filter({
-                  filterFn: function (item) {
-                    return (
-                      item
-                        .get('fullName')
-                        .toLowerCase()
-                        .indexOf(searchValue.toLowerCase()) > -1 ||
-                      item
-                        .get('email')
-                        .toLowerCase()
-                        .indexOf(searchValue.toLowerCase()) > -1 ||
-                      item
-                        .get('phone')
-                        .toLowerCase()
-                        .indexOf(searchValue.toLowerCase()) > -1
-                      //   ||
-                      // item
-                      //   .get('expiredDate')
-                      //   .split('-')
-                      //   .reverse()
-                      //   .join('/')
-                      //   .indexOf(searchValue) > -1
-                    );
-                  },
-                }),
-              ];
-              storeCustomer.filter(filters);
+              var proxy = storeCustomer.getProxy();
+              proxy.setConfig('url', ['/customer/find/']);
+              proxy.setConfig('extraParams', { searchValue });
+              storeCustomer.load();
             }
           },
         },

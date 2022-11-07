@@ -2,7 +2,7 @@ const getCmp = function (query) {
     return Ext.ComponentQuery.query(query)[0];
   },
   createTab = ({ itemIdTabPanel, title, icon, htmlFile }) => {
-    var tabPanel = getCmp(itemIdTabPanel)
+    var tabPanel = getCmp(itemIdTabPanel);
     var tab = tabPanel.add({
       xtype: 'component',
       title: title,
@@ -62,12 +62,16 @@ Ext.define('KitchenSink.view.layout.Border', {
     {
       xtype: 'panel',
       collapsible: false,
+      //header: false,
+      split: false,
       title: 'Menu',
       icon: 'https://icons.iconarchive.com/icons/icons8/windows-8/16/Very-Basic-Menu-icon.png',
       region: 'west',
       width: 200,
       height: 500,
       bodyPadding: 0,
+      bodyBorder: 'none',
+      border: 0,
       items: {
         xtype: 'menu',
         plain: true,
@@ -113,9 +117,7 @@ Ext.define('KitchenSink.view.layout.Border', {
     },
     {
       xtype: 'tabpanel',
-      title: 'Main Content',
       collapsible: false,
-      header: false,
       region: 'center',
       itemId: 'mainContent',
       bodyPadding: 0,

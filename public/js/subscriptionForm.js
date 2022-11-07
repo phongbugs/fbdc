@@ -58,7 +58,7 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
   icon: 'https://icons.iconarchive.com/icons/hopstarter/sleek-xp-basic/16/Document-Write-icon.png',
   bodyPadding: 15,
   width: 600,
-  height: 500,
+  height: 450,
   layout: 'anchor',
   defaults: {
     anchor: '100%',
@@ -90,11 +90,6 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
   listeners: {
     hide: () => {
       getCmp('#subscriptionGrid').enable();
-    },
-    show: () => {
-      Ext.getCmp('btnSubmitsubscriptionForm').setIconCls(
-        subscriptionFormAction.iconCls
-      );
     },
   },
   defaultType: 'textfield',
@@ -135,7 +130,7 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
     },
     {
       xtype: 'datefield',
-      fieldLabel: 'Subcribe Date',
+      fieldLabel: 'Subscribe Date',
       name: 'subscriptionDate',
       format: 'd/m/Y',
       editable: false,
@@ -202,7 +197,7 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
           xtype: 'rownumberer',
           dataIndex: 'id',
           text: 'No',
-          width: 55,
+          width: 52,
         },
         {
           text: 'Amount',
@@ -217,8 +212,8 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
           renderer: (v) => (v ? getDayQuantity(v) : 0),
         },
         {
-          text: 'Subcribe Date',
-          width: 110,
+          text: 'Subscribe Date',
+          width: 120,
           dataIndex: 'subscriptionDate',
           renderer: (v) => new Date(v).toLocaleDateString(),
         },
@@ -299,74 +294,6 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
           );
           return isExpired ? 'expiredSubscriptionDetail' : 'active';
         },
-      },
-    },
-  ],
-
-  buttons: [
-    {
-      icon: 'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-8/16/Refresh-icon.png',
-      text: 'Refresh',
-      handler: function () {
-        this.up('form').getForm().reset();
-      },
-      id: 'btnResetsubscriptionForm',
-    },
-    {
-      id: 'btnSubmitsubscriptionForm',
-      text: subscriptionFormAction.label,
-      formBind: true,
-      disabled: false,
-      handler: function () {
-        var form = this.up('form').getForm();
-        if (form.isValid()) {
-          let button = this;
-          button.setIconCls('spinner');
-          button.disable();
-          form.submit({
-            url: hostAPI + '/subscription/' + subscriptionFormAction.name,
-            method: subscriptionFormAction.method,
-            success: function (form, action) {
-              if (!action.result.success)
-                Ext.Msg.alert('Kểt Quả', action.result.message);
-              else {
-                let grid = Ext.getCmp('subscriptionGrid'),
-                  store = grid.getStore();
-                switch (subscriptionFormAction.name) {
-                  case 'create':
-                    // add new record
-                    let r = action.result.data,
-                      rIndex = store.getData().getCount();
-                    // fix bind new r(just added) to form
-                    //r.re_examination_date = r.re_examination_date.substr(0, 10);
-                    //r.gender = +r.gender;
-                    store.insert(rIndex, r);
-                    subscriptionForm.reset();
-                    grid.getView().addRowCls(rIndex, 'success');
-                    subscriptionForm.hide();
-                    break;
-                  case 'update':
-                    let record = form.getValues();
-                    log(record);
-                    var removedRecord = store.findRecord('id', record.id);
-                    var recordIndex = store.indexOf(removedRecord);
-                    store.remove(removedRecord);
-                    store.insert(recordIndex, record);
-                    grid.getView().addRowCls(recordIndex, 'success');
-                    subscriptionForm.hide();
-                    break;
-                }
-              }
-              button.enable();
-              button.setIconCls(subscriptionFormAction.icon);
-            },
-            failure: function (form, action) {
-              Ext.Msg.alert('Thông báo', action.result.message);
-              button.setIconCls('update');
-              button.enable();
-            },
-          });
-        }
       },
     },
   ],
