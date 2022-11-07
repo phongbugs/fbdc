@@ -83,15 +83,19 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       handler: () => {
         subscriptionForm.hide();
         getCmp('#subscriptionGrid').enable();
+        getCmp('#subscriptionGrid').getStore().reload();
       },
     },
   ],
   listeners: {
-    hide: () => getCmp('#subscriptionGrid').enable(),
-    show: () =>
+    hide: () => {
+      getCmp('#subscriptionGrid').enable();
+    },
+    show: () => {
       Ext.getCmp('btnSubmitsubscriptionForm').setIconCls(
         subscriptionFormAction.iconCls
-      ),
+      );
+    },
   },
   defaultType: 'textfield',
   defaultStyle: {
@@ -145,31 +149,18 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       editable: false,
       readOnly: true,
     },
-    {
-      fieldLabel: 'Status',
-      name: 'status',
-      itemId: 'txtStatus',
-      editable: false,
-      //fieldCls: 'active',
-    },
     // {
-    //   xtype: 'combo',
     //   fieldLabel: 'Status',
-    //   store: new Ext.data.ArrayStore({
-    //     fields: ['statusValue', 'statusDisplay'],
-    //     data: [
-    //       [true, 'Active'],
-    //       [false, 'Expired'],
-    //     ],
-    //   }),
-    //   displayField: 'statusDisplay',
-    //   valueField: 'statusValue',
     //   name: 'status',
-    //   itemId: 'cbbStatus',
+    //   itemId: 'txtStatus',
     //   editable: false,
-    //   submitValue: false,
-    //   fieldCls:'expired'
     // },
+    {
+      xtype: 'component',
+      id: 'statusBox',
+      itemdId: 'statusBox',
+      ariaLabel: '',
+    },
     {
       xtype: 'gridpanel',
       itemId: 'subscriptionDetailGrid',
@@ -190,7 +181,7 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       listeners: {
         // beforeedit: function (editor, context) {},
         show: (grid) => {},
-        hide: () => Ext.getCmp('gridWLs').setDisabled(false),
+        hide: () => null,
       },
       tbar: [
         {
@@ -297,14 +288,16 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       ],
       viewConfig: {
         getRowClass: function (record, index, rowParams) {
-          var currentDate = new Date(),
-            expiredDate = calcExpiredDate(
-              new Date(record.get('subscriptionDate')),
-              record.get('amount')
-            );
-          return expiredDate.getTime() - currentDate.getTime() < 0
-            ? 'expiredSubscriptionDetail'
-            : 'active';
+          // var currentDate = new Date(),
+          //   expiredDate = calcExpiredDate(
+          //     new Date(record.get('subscriptionDate')),
+          //     record.get('amount')
+          //   );
+          let isExpired = isExpiredDate(
+            record.get('subscriptionDate'),
+            record.get('amount')
+          );
+          return isExpired ? 'expiredSubscriptionDetail' : 'active';
         },
       },
     },
@@ -313,7 +306,7 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
   buttons: [
     {
       icon: 'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-8/16/Refresh-icon.png',
-      text: 'Làm mới',
+      text: 'Refresh',
       handler: function () {
         this.up('form').getForm().reset();
       },

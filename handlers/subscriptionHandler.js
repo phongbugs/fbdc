@@ -46,7 +46,7 @@ const db = require('../models'),
           {
             model: db.customer,
             attributes: ['fullName', 'email'],
-            required: true,
+            //required: true,
           },
         ],
         offset: +start,
@@ -71,10 +71,6 @@ const db = require('../models'),
   },
   update = (req, res) => {
     const id = req.body.id;
-    // req.body.re_examination_date = req.body.re_examination_date
-    //   .split('/')
-    //   .reverse()
-    //   .join('-');
     Subscription.update(req.body, {
       where: { id: id },
     })
@@ -105,10 +101,10 @@ const db = require('../models'),
       where: { id: ids },
     })
       .then((num) => {
-        if (num == 1) {
+        if (Number.isInteger(num)) {
           res.send({
             success: true,
-            message: 'subscription was deleted successfully.',
+            message: `Subscription was deleted successfully ${ids.length} records.`,
           });
         } else {
           res.send({

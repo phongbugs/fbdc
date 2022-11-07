@@ -5,7 +5,7 @@ let Groups,
     startCollapsed: true,
     showSummaryRow: false,
     groupHeaderTpl: [
-      '<div style="color:#d14836; font-weight: bold">{name:this.formatName}<span style="color:green; font-weight: normal"> ({rows.length} Bệnh nhân)</span></div>',
+      '<div style="color:#d14836; font-weight: bold">{name:this.formatName}<span style="color:green; font-weight: normal"> ({rows.length} User)</span></div>',
       {
         formatName: (name) => {
           for (let i = 0; i < Groups.items.length; i++) {
@@ -60,20 +60,23 @@ let Groups,
     let currentDate = new Date(),
       expiredDate = calcExpiredDate(supscriptionDate, amount);
     return expiredDate.getTime() - currentDate.getTime() < 0;
+  },
+  formatFormRecord = (formRecord) => {
+    formRecord.set(
+      'totalAmount',
+      formatCash(formRecord.get('totalAmount').toString())
+    );
+    let isExpired = isExpiredDate(
+      formRecord.get('subscriptionDate'),
+      formRecord.get('totalAmount')
+    );
+    log(isExpired);
+    getCmp('#statusBox').setHtml(
+      `<div id="divStatus" style="padding-left:104px"><span style="display:flex" class="${
+        isExpired ? 'expiredbox' : 'activebox'
+      }"> ${isExpired ? 'Expired' : 'Active'}</span></div>`
+    );
   };
-formatFormRecord = (formRecord) => {
-  formRecord.set(
-    'totalAmount',
-    formatCash(formRecord.get('totalAmount').toString())
-  );
-  let isExpired = isExpiredDate(
-    formRecord.get('subscriptionDate'),
-    formRecord.get('totalAmount')
-  );
-  log(isExpired);
-  formRecord.set('status', isExpired ? 'Expired' : 'Active');
-  getCmp('#txtStatus').fieldCls = isExpired ? 'expired' : 'active';
-};
 Ext.onReady(function () {
   Ext.define('Subscription', {
     extend: 'Ext.data.Model',
@@ -129,8 +132,16 @@ Ext.onReady(function () {
     },
     listeners: {
       load: function (_, records, successful, operation, eOpts) {
+        // records = records.map((record) => {
+        //   //let status = record.status ? 'Active' : 'Expired';
+        //   //record.set('status', status);
+        //   //log(record);
+        //   return record;
+        // });
+
         data = records;
         Groups = storeSubscription.getGroups();
+        log(Groups);
       },
     },
     autoLoad: true,
@@ -160,13 +171,14 @@ Ext.onReady(function () {
     listeners: {
       viewready: (_) => {
         loadScript('js/subscriptionForm.js');
+        loadScript('js/subscriptionAddForm.js');
       },
       celldblclick(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
         subscriptionGrid.setDisabled(true);
         subscriptionFormAction = actions.update;
         subscriptionForm.show();
 
-        let formRecord = _.clone(record);
+        let formRecord = record; // _.clone(record);
         formatFormRecord(formRecord);
         subscriptionForm.loadRecord(formRecord);
         subscriptionForm
@@ -204,8 +216,10 @@ Ext.onReady(function () {
           arrSubscriptionDetailIds.forEach((arr) => {
             subscriptionDetailIds = [...arr, ...subscriptionDetailIds];
           });
+          let uniqueSubscriptionDetailIds = [...new Set(subscriptionDetailIds)];
           log(arrSubscriptionDetailIds);
           log(subscriptionDetailIds);
+          log(uniqueSubscriptionDetailIds);
           Ext.Msg.confirm(
             'Xác nhận',
             'Bạn muốn xóa ' + seletedRecords.length + ' đăng kí này ?',
@@ -216,26 +230,28 @@ Ext.onReady(function () {
                   url:
                     hostAPI +
                     '/subscription-detail/delete/' +
-                    subscriptionDetailIds.toString(),
+                    uniqueSubscriptionDetailIds.toString(),
                   success: function (response) {
-                    var ids = seletedRecords.map((record) => record.data.id);
+                    var subscriptionIds = seletedRecords.map(
+                      (record) => record.data.id
+                    );
                     Ext.Ajax.request({
                       method: 'DELETE',
-                      url: hostAPI + '/subscription/delete/' + ids.toString(),
-                      params: {
-                        subscriptionDetailIds: subscriptionDetailIds.toString(),
-                      },
+                      url:
+                        hostAPI +
+                        '/subscription/delete/' +
+                        subscriptionIds.toString(),
                       success: function (response) {
                         storeSubscription.remove(seletedRecords);
                         getCmp('#subscriptionGrid').getStore().load();
                       },
                       failure: function (response) {
-                        alert(JSON.stringify(response));
+                        log(response);
                       },
                     });
                   },
                   failure: function (response) {
-                    alert(JSON.stringify(response));
+                    log(response);
                   },
                 });
               }
@@ -264,19 +280,17 @@ Ext.onReady(function () {
           click: () => {
             subscriptionGrid.setDisabled(true);
             subscriptionFormAction = actions.create;
-            subscriptionForm.show();
-            subscriptionForm.reset();
-            resetButton = subscriptionForm.query(
-              '#btnResetsubscriptionForm'
+            subscriptionAddForm.show();
+            subscriptionAddForm.reset();
+            resetButton = subscriptionAddForm.query(
+              '#btnResetSubscriptionAddForm'
             )[0];
             resetButton.setDisabled(false);
-            submitButton = subscriptionForm.query(
-              '#btnSubmitsubscriptionForm'
+            submitButton = subscriptionAddForm.query(
+              '#btnSubmitSubscriptionAddForm'
             )[0];
             submitButton.setText(subscriptionFormAction.label);
             submitButton.setIcon(subscriptionFormAction.icon);
-
-            storeSubscriptionDetail.loadData([]);
           },
         },
       },
@@ -287,8 +301,11 @@ Ext.onReady(function () {
         store: new Ext.data.ArrayStore({
           fields: ['id', 'name'],
           data: [
-            ['default', 'Phân nhóm'],
-            ['subscriptionDate', 'Giới tính'],
+            ['default', 'Group by'],
+            ['status', 'Status'],
+            ['subscriptionDate', 'supcription Date'],
+            ['subscriptionDate', 'supcription Date'],
+            ['totalAmount', 'Total Amount'],
           ],
         }),
         queryMode: 'local',
@@ -313,8 +330,7 @@ Ext.onReady(function () {
       {
         xtype: 'textfield',
         width: 250,
-        id: 'txtsubscriptionFindField',
-        itemId: 'txtsubscriptionFindField',
+        itemId: 'txtSubscriptionFindField',
         enableKeyEvents: true,
         listeners: {
           keypress: () => Ext.getCmp('btnFind').fireEvent('click'),
@@ -332,7 +348,7 @@ Ext.onReady(function () {
         listeners: {
           click: () => {
             storeSubscription.clearFilter();
-            var searchValue = Ext.getCmp('txtsubscriptionFindField').getValue();
+            var searchValue = getCmp('#txtSubscriptionFindField').getValue();
             if (!!searchValue) {
               var filters = [
                 new Ext.util.Filter({
@@ -343,24 +359,14 @@ Ext.onReady(function () {
                         .toLowerCase()
                         .indexOf(searchValue.toLowerCase()) > -1 ||
                       item
-                        .get('phone')
-                        .toLowerCase()
-                        .indexOf(searchValue.toLowerCase()) > -1 ||
-                      item
                         .get('email')
                         .toLowerCase()
                         .indexOf(searchValue.toLowerCase()) > -1 ||
                       item
                         .get('subscriptionDate')
-                        .split('-')
-                        .reverse()
-                        .join('/')
                         .indexOf(searchValue) > -1 ||
                       item
                         .get('expiredDate')
-                        .split('-')
-                        .reverse()
-                        .join('/')
                         .indexOf(searchValue) > -1
                     );
                   },

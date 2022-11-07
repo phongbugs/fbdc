@@ -79,6 +79,7 @@ Ext.onReady(function () {
       load: function (_, records, successful, operation, eOpts) {
         data = records;
         Groups = storeCustomer.getGroups();
+        log(Groups)
       },
     },
     autoLoad: true,

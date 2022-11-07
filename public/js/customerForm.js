@@ -141,7 +141,7 @@ var customerForm = Ext.create('Ext.form.Panel', {
     {
       icon:
         'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-8/16/Refresh-icon.png',
-      text: 'Làm mới',
+      text: 'Refresh',
       handler: function () {
         this.up('form').getForm().reset();
       },
