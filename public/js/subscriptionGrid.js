@@ -56,9 +56,8 @@ let Groups,
         return (index % 3 ? next : next + '.') + prev;
       });
   },
-  isExpiredDate = (supscriptionDate, amount) => {
-    let currentDate = new Date(),
-      expiredDate = calcExpiredDate(supscriptionDate, amount);
+  isExpiredDate = (expiredDate) => {
+    let currentDate = new Date();
     return expiredDate.getTime() - currentDate.getTime() < 0;
   },
   formatFormRecord = (formRecord) => {
@@ -66,11 +65,10 @@ let Groups,
       'totalAmount',
       formatCash(formRecord.get('totalAmount').toString())
     );
-    let isExpired = isExpiredDate(
-      formRecord.get('subscriptionDate'),
-      formRecord.get('totalAmount')
-    );
-    log(isExpired);
+    formRecord.set('expiredDate', new Date(formRecord.get('expiredDate')));
+    log(formRecord);
+    let isExpired = isExpiredDate(formRecord.get('expiredDate'));
+    log(`isExpired : ${isExpired}`);
     getCmp('#statusBox').setHtml(
       `<div id="divStatus" style="padding-left:104px"><span style="display:flex" class="${
         isExpired ? 'expiredbox' : 'activebox'
@@ -108,20 +106,21 @@ Ext.onReady(function () {
                 record = { ...record, ...record['Customer'] };
                 delete record['Customer'];
                 // sum amount
-                record.SubscriptionDetails.forEach((subscriptionDetail) => {
-                  record.totalAmount += subscriptionDetail.amount;
-                });
-                record.totalDay = (record.totalAmount / 25000) * 30;
+                // record.SubscriptionDetails.forEach((subscriptionDetail) => {
+                //   record.totalAmount += subscriptionDetail.amount;
+                // });
+                //record.totalDay = (record.totalAmount / 25000) * 30;
                 record.subscriptionDate = _.min(
                   record.SubscriptionDetails.map(
                     (s) => new Date(s.subscriptionDate)
                   )
                 );
-                record.expiredDate = new Date(
-                  new Date(record.subscriptionDate).getTime() +
-                    record.totalDay * 24 * 3600 * 1000
-                );
+                // record.expiredDate = new Date(
+                //   new Date(record.subscriptionDate).getTime() +
+                //     record.totalDay * 24 * 3600 * 1000
+                // );
                 //console.log(record)
+                log(record);
                 return record;
               });
             }
@@ -188,6 +187,11 @@ Ext.onReady(function () {
           .getAt(rowIndex)
           .get('SubscriptionDetails');
         storeSubscriptionDetail.loadData(subscriptionDetailGridData);
+
+        let status = formRecord.get('status'),
+          btnDeleteSubscriptionDetail = getCmp('#subscriptionDetailGrid');
+        if (status) btnDeleteSubscriptionDetail.enable();
+        else btnDeleteSubscriptionDetail.setDisabled(true);
       },
     },
     tbar: [
@@ -256,7 +260,7 @@ Ext.onReady(function () {
       {
         xtype: 'button',
         itemId: 'btnClear',
-        tooltip:'Xóa tạm dữ liệu',
+        tooltip: 'Xóa tạm dữ liệu',
         icon: 'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-10/16/Trash-icon.png',
         listeners: {
           click: () => {
@@ -282,7 +286,7 @@ Ext.onReady(function () {
         xtype: 'button',
         itemId: 'btnSubscribe',
         disabled: true,
-        icon: 'https://icons.iconarchive.com/icons/fatcow/farm-fresh/16/coins-add-icon.png',
+        iconCls: 'subscribe',
         text: actions.create.label,
         listeners: {
           click: () => {
@@ -420,7 +424,7 @@ Ext.onReady(function () {
         text: 'Expired Date',
         width: 120,
         dataIndex: 'expiredDate',
-        renderer: (v) => v.toLocaleDateString('vi-VN'),
+        renderer: (v) => new Date(v).toLocaleDateString('vi-VN'),
       },
       {
         text: 'Status',
@@ -431,7 +435,7 @@ Ext.onReady(function () {
     ],
     viewConfig: {
       getRowClass: function (record, index, rowParams) {
-        return !record.get('status') ? 'expired' : '';
+        return record.get('status') ? 'activeSubscription' : 'expired';
       },
     },
   });

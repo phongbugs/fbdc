@@ -12,13 +12,7 @@ Ext.define('SubscriptionDetail', {
 var storeSubscriptionDetail = Ext.create('Ext.data.Store', {
   autoLoad: true,
   model: 'SubscriptionDetail',
-  data: [
-    {
-      subscriptionId: 811,
-      amount: 75000,
-      subscriptionDate: '1970-04-30T11:05:38.000Z',
-    },
-  ],
+  data: [],
   proxy: {
     type: 'memory',
     reader: {
@@ -91,6 +85,7 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
     hide: () => {
       getCmp('#subscriptionGrid').enable();
     },
+    show: () => {},
   },
   defaultType: 'textfield',
   defaultStyle: {
@@ -164,6 +159,7 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       height: 200,
       frame: false,
       header: false,
+      disabled: true,
       tools: [
         {
           type: 'close',
@@ -178,20 +174,6 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
         show: (grid) => {},
         hide: () => null,
       },
-      tbar: [
-        {
-          xtype: 'button',
-          text: 'Add',
-          itemId: '#btnAddSubscriptionDetail',
-          icon: 'https://icons.iconarchive.com/icons/awicons/vista-artistic/16/coin-add-icon.png',
-          listeners: {
-            click: () => {
-              storeSubscriptionDetail.clearFilter();
-              storeSubscriptionDetail.reload();
-            },
-          },
-        },
-      ],
       columns: [
         {
           xtype: 'rownumberer',
@@ -215,7 +197,7 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
           text: 'Subscribe Date',
           width: 120,
           dataIndex: 'subscriptionDate',
-          renderer: (v) => new Date(v).toLocaleDateString(),
+          renderer: (v) => new Date(v).toLocaleDateString('vi-VN'),
         },
         {
           text: 'Expired Date',
@@ -229,20 +211,10 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
         {
           text: 'Status',
           width: 65,
-          renderer: (value, metaData, record) => {
-            try {
-              let currentDate = new Date(),
-                expiredDate = calcExpiredDate(
-                  new Date(record.get('subscriptionDate')),
-                  record.get('amount')
-                );
-              return expiredDate.getTime() - currentDate.getTime() < 0
-                ? 'Expired'
-                : 'Active';
-            } catch (error) {
-              log(error);
-            }
-          },
+          renderer: (value, metaData, record) =>
+            isExpiredDate(new Date(record.get('expiredDate')))
+              ? 'Expired'
+              : 'Active',
         },
         {
           xtype: 'actioncolumn',
@@ -250,9 +222,13 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
           tooltip: 'Xóa dòng này',
           align: 'center',
           text: 'Del',
+          disabled: true,
           items: [
             {
               icon: actions.delete.icon,
+              //disabled: true,
+              itemId: 'btnDeleteSubscriptionDetail',
+              id: 'btnDeleteSubscriptionDetail',
               handler: function (grid, rowIndex, colIndex, item, e, record) {
                 Ext.Msg.confirm(
                   'Xác nhận',
@@ -283,16 +259,9 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       ],
       viewConfig: {
         getRowClass: function (record, index, rowParams) {
-          // var currentDate = new Date(),
-          //   expiredDate = calcExpiredDate(
-          //     new Date(record.get('subscriptionDate')),
-          //     record.get('amount')
-          //   );
-          let isExpired = isExpiredDate(
-            record.get('subscriptionDate'),
-            record.get('amount')
-          );
-          return isExpired ? 'expiredSubscriptionDetail' : 'active';
+          return isExpiredDate(new Date(record.get('expiredDate')))
+            ? 'expiredSubscriptionDetail'
+            : 'activeSubscriptionDetail';
         },
       },
     },

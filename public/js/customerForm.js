@@ -2,8 +2,7 @@ var customerForm = Ext.create('Ext.form.Panel', {
   id: 'customerForm',
   bodyStyle: 'background:transparent',
   title: 'Thông tin người dùng',
-  icon:
-    'https://icons.iconarchive.com/icons/custom-icon-design/pretty-office-8/16/User-blue-icon.png',
+  icon: 'https://icons.iconarchive.com/icons/custom-icon-design/pretty-office-8/16/User-blue-icon.png',
   bodyPadding: 15,
   width: 450,
   layout: 'anchor',
@@ -29,12 +28,12 @@ var customerForm = Ext.create('Ext.form.Panel', {
       type: 'close',
       handler: () => {
         customerForm.hide();
-        Ext.getCmp('customerGrid').enable();
+        getCmp('#customerGrid').enable();
       },
     },
   ],
   listeners: {
-    hide: () => Ext.getCmp('customerGrid').enable(),
+    hide: () => getCmp('#customerGrid').enable(),
     show: () =>
       Ext.getCmp('btnSubmitCustomerForm').setIconCls(
         customerFormAction.iconCls
@@ -118,7 +117,7 @@ var customerForm = Ext.create('Ext.form.Panel', {
     //   name: 'address',
     //   allowBlank: false,
     // },
-    
+
     // {
     //   xtype: 'numberfield',
     //   fieldLabel: 'Khám thường niên',
@@ -139,8 +138,7 @@ var customerForm = Ext.create('Ext.form.Panel', {
   ],
   buttons: [
     {
-      icon:
-        'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-8/16/Refresh-icon.png',
+      icon: 'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-8/16/Refresh-icon.png',
       text: 'Refresh',
       handler: function () {
         this.up('form').getForm().reset();
@@ -165,7 +163,7 @@ var customerForm = Ext.create('Ext.form.Panel', {
               if (!action.result.success)
                 Ext.Msg.alert('Kểt Quả', action.result.message);
               else {
-                let grid = Ext.getCmp('customerGrid'),
+                let grid = getCmp('#customerGrid'),
                   store = grid.getStore();
                 switch (customerFormAction.name) {
                   case 'create':

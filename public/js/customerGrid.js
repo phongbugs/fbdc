@@ -87,7 +87,7 @@ Ext.onReady(function () {
 
   let customerGrid = Ext.create('Ext.grid.Panel', {
     renderTo: 'app',
-    id: 'customerGrid',
+    itemId: 'customerGrid',
     store: storeCustomer,
     width: Ext.getBody().getViewSize().width,
     height: Ext.getBody().getViewSize().height,
@@ -96,12 +96,20 @@ Ext.onReady(function () {
     plugins: ['gridfilters'],
     multiSelect: true,
     selModel: Ext.create('Ext.selection.CheckboxModel', {
-      mode: 'SINGLE',
+      mode: 'MULTI',
       listeners: {
         selectionchange: function (model, selections) {
           var btnDelete = getCmp('#btnDelete');
-          if (selections.length > 0) btnDelete.setDisabled(false);
-          else btnDelete.setDisabled(true);
+          var btnSubscribe = getCmp('#btnSubscribe');
+          if (selections.length > 0) {
+            btnDelete.setDisabled(false);
+            if (selections.length === 1) {
+              btnSubscribe.setDisabled(false);
+            } else btnSubscribe.setDisabled(true);
+          } else {
+            btnDelete.setDisabled(true);
+            btnSubscribe.setDisabled(true);
+          }
         },
       },
     }),
@@ -109,6 +117,7 @@ Ext.onReady(function () {
     listeners: {
       viewready: (_) => {
         loadScript('js/customerForm.js');
+        loadScript('js/subscriptionAddForm.js');
       },
       celldblclick(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
         if (cellIndex > 0 && cellIndex <= 5) {
@@ -188,7 +197,25 @@ Ext.onReady(function () {
           },
         },
       },
-
+      {
+        xtype: 'button',
+        itemId: 'btnSubscribe',
+        disabled: true,
+        iconCls: 'subscribe',
+        text: 'Subsribe',
+        listeners: {
+          click: () => {
+            customerGrid.setDisabled(true);
+            var seletedRecord = customerGrid
+              .getSelectionModel()
+              .getSelected()
+              .getAt(0);
+            seletedRecord.set('subscriptionDate', new Date());
+            subscriptionAddForm.loadRecord(seletedRecord);
+            subscriptionAddForm.show();
+          },
+        },
+      },
       {
         xtype: 'combo',
         width: 120,
@@ -333,7 +360,7 @@ Ext.onReady(function () {
         align: 'center',
         items: [
           {
-            icon: 'https://icons.iconarchive.com/icons/awicons/vista-artistic/16/coin-add-icon.png',
+            icon: 'https://icons.iconarchive.com/icons/fatcow/farm-fresh/16/coins-add-icon.png',
             handler: function (grid, rowIndex, colIndex, item, e, record) {},
           },
         ],

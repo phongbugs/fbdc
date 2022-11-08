@@ -29,14 +29,20 @@ var subscriptionAddForm = Ext.create('Ext.form.Panel', {
       type: 'close',
       handler: () => {
         subscriptionAddForm.hide();
-        getCmp('#subscriptionGrid').enable();
-        getCmp('#subscriptionGrid').getStore().reload();
+        let subscriptionGrid = getCmp('#subscriptionGrid');
+        if (subscriptionGrid) {
+          subscriptionGrid.enable();
+          subscriptionGrid.getStore().reload();
+        }
       },
     },
   ],
   listeners: {
     hide: () => {
-      getCmp('#subscriptionGrid').enable();
+      let subscriptionGrid = getCmp('#subscriptionGrid');
+      let customerGrid = getCmp('#customerGrid');
+      if (subscriptionGrid) subscriptionGrid.enable();
+      if (customerGrid) customerGrid.enable();
     },
   },
   defaultType: 'textfield',
@@ -44,6 +50,13 @@ var subscriptionAddForm = Ext.create('Ext.form.Panel', {
     height: '50px',
   },
   items: [
+    // use for subscription grid
+    {
+      xtype: 'hiddenfield',
+      name: 'customerId',
+      allowBlank: false,
+    },
+    // use for customer grid
     {
       xtype: 'hiddenfield',
       name: 'id',
@@ -81,15 +94,13 @@ var subscriptionAddForm = Ext.create('Ext.form.Panel', {
       }),
       displayField: 'amountDisplay',
       valueField: 'amountValue',
-      name: 'cbbAmount',
-      id: 'cbbAmount',
+      name: 'amount',
       value: 25000,
       editable: false,
       listeners: {
         change: (_, newValue) => {},
       },
     },
-
     {
       xtype: 'datefield',
       fieldLabel: 'Subcribe Date',
@@ -102,7 +113,7 @@ var subscriptionAddForm = Ext.create('Ext.form.Panel', {
   buttons: [
     {
       itemId: 'btnSubmitsubscriptionAddForm',
-      icon: 'https://icons.iconarchive.com/icons/fatcow/farm-fresh/16/coins-add-icon.png',
+      iconCls: 'subscribe',
       text: 'Add',
       formBind: true,
       disabled: false,
@@ -119,26 +130,19 @@ var subscriptionAddForm = Ext.create('Ext.form.Panel', {
               if (!action.result.success)
                 Ext.Msg.alert('Kểt Quả', action.result.message);
               else {
-                let grid = Ext.getCmp('subscriptionGrid'),
-                  store = grid.getStore();
-                switch (subscriptionAddFormAction.name) {
-                  case 'create':
-                    // add new record
-                    let r = action.result.data,
-                      rIndex = store.getData().getCount();
-                    store.insert(rIndex, r);
-                    subscriptionAddForm.reset();
-                    grid.getView().addRowCls(rIndex, 'success');
-                    subscriptionAddForm.hide();
-                    break;
+                let subscriptionGrid = getCmp('#subscriptionGrid');
+                if (subscriptionGrid) {
+                  subscriptionGrid.getStore().load();
                 }
+                subscriptionAddForm.reset();
+                subscriptionAddForm.hide();
               }
               button.enable();
-              button.setIconCls(subscriptionAddFormAction.icon);
+              button.setIconCls('subscribe');
             },
             failure: function (form, action) {
               Ext.Msg.alert('Thông báo', action.result.message);
-              button.setIconCls('update');
+              button.setIconCls('subscribe');
               button.enable();
             },
           });
