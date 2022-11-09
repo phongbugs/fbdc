@@ -79,7 +79,6 @@ Ext.onReady(function () {
       load: function (_, records, successful, operation, eOpts) {
         data = records;
         Groups = storeCustomer.getGroups();
-        log(Groups);
       },
     },
     autoLoad: true,
@@ -202,7 +201,7 @@ Ext.onReady(function () {
         itemId: 'btnSubscribe',
         disabled: true,
         iconCls: 'subscribe',
-        text: 'Subsribe',
+        text: 'Subscribe',
         listeners: {
           click: () => {
             customerGrid.setDisabled(true);

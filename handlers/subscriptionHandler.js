@@ -2,36 +2,12 @@ const db = require('../models'),
   Subscription = db.subscription,
   SubscriptionDetails = db.subscriptionDetail,
   log = console.log,
-  getDayQuantity = (amount) => {
-    var day = 0;
-    switch (amount) {
-      case 25000:
-        day = 30;
-        break;
-      case 50000:
-        day = 60;
-        break;
-      case 75000:
-        day = 90;
-        break;
-      case 150000:
-        day = 180;
-        break;
-      case 300000:
-        day = 360;
-        break;
-    }
-    return day;
-  },
-  formatDate = (date) => date.split('/').reverse().join('-'),
-  isExpiredDate = (supscriptionDate, amount) => {
-    let currentDate = new Date(),
-      expiredDate = getExpiredDate(supscriptionDate, amount);
-    return expiredDate.getTime() - currentDate.getTime() < 0;
-  },
-  getExpiredDate = (subscriptionDate, totalDay) => {
-    return new Date(subscriptionDate.getTime() + totalDay * 24 * 3600 * 1000);
-  },
+  {
+    getDayQuantity,
+    formatDate,
+    isExpiredDate,
+    getExpiredDate,
+  } = require('./util'),
   findNonexpiredSubscriptionByCustomerId = async (customerId) => {
     return await Subscription.findOne({
       include: [
@@ -47,7 +23,6 @@ const db = require('../models'),
       where: {
         status: true,
       },
-      order: [['expiredDate', 'DESC']],
     });
   },
   createSubscription = (req, res) => {
@@ -57,12 +32,13 @@ const db = require('../models'),
     let amount = +body.amount;
     let subscriptionDate = new Date(formatDate(body.subscriptionDate));
     let totalDay = getDayQuantity(amount);
+    let expiredDate = getExpiredDate(subscriptionDate, totalDay);
     let subscription = {
       customerId: +customerId,
       totalAmount: amount,
       totalDay: totalDay,
-      expiredDate: getExpiredDate(subscriptionDate, totalDay),
-      status: !isExpiredDate(subscriptionDate, amount),
+      expiredDate: expiredDate,
+      status: !isExpiredDate(expiredDate),
     };
     Subscription.create(subscription)
       .then((data) => {
@@ -85,17 +61,23 @@ const db = require('../models'),
   updateSubscription = (req, res, availableSubscription) => {
     let body = req.body;
     let subscriptionId = availableSubscription.id;
+    let subscriptionDate = new Date(formatDate(body.subscriptionDate));
+
     SubscriptionDetails.create({
       subscriptionId: subscriptionId,
       amount: +body.amount,
-      subscriptionDate: body.subscriptionDate,
+      subscriptionDate: subscriptionDate,
     }).then((data) => {
       let customerId = body.customerId || body.id;
       let amount = +body.amount + availableSubscription.totalAmount;
+      let totalDay = (amount / 25000) * 30;
+      let expiredDate = getExpiredDate(subscriptionDate, totalDay);
       let subscription = {
         customerId: +customerId,
         totalAmount: amount,
-        totalDay: (amount / 25000) * 30,
+        totalDay: totalDay,
+        expiredDate: expiredDate,
+        status: !isExpiredDate(expiredDate),
       };
       Subscription.update(subscription, {
         where: { id: subscriptionId },
@@ -221,6 +203,53 @@ const db = require('../models'),
         });
       });
   },
+  findByStatus = (req, res) => {
+    try {
+      let { start, limit } = req.query;
+      let status = req.params.status;
+      Subscription.findAll({
+        attributes: [
+          'id',
+          'customerId',
+          'totalAmount',
+          'totalDay',
+          'status',
+          'expiredDate',
+        ],
+        include: [
+          {
+            model: db.subscriptionDetail,
+            attributes: ['id', 'subscriptionId', 'amount', 'subscriptionDate'],
+            required: true,
+          },
+          {
+            model: db.customer,
+            attributes: ['fullName', 'email'],
+          },
+        ],
+        offset: +start,
+        limit: +limit,
+        where: {
+          status: status === 'active' ? 1 : 0,
+        },
+        order: [['expiredDate', 'DESC']],
+      })
+        .then(async (data) => {
+          const count = await Subscription.count();
+          res.send({ records: data, totalCount: count, success: true });
+        })
+        .catch((err) => {
+          res.status(500).send({
+            success: false,
+            message:
+              err.message ||
+              'Some error occurred at findByStatus subscription.',
+          });
+        });
+    } catch (error) {
+      log(err);
+    }
+  },
   update = (req, res) => {
     const id = req.body.id;
     Subscription.update(req.body, {
@@ -277,6 +306,7 @@ module.exports = {
   create,
   list,
   find,
+  findByStatus,
   update,
   deleteSubscription,
 };

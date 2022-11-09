@@ -1,6 +1,13 @@
 const db = require('../models'),
   SubscriptionDetail = db.subscriptionDetail,
+  Subscription = db.subscription,
   log = console.log,
+  {
+    getDayQuantity,
+    formatDate,
+    isExpiredDate,
+    getExpiredDate,
+  } = require('./util'),
   create = (req, res) => {
     try {
       let body = req.body;
@@ -26,93 +33,75 @@ const db = require('../models'),
       res.send({ success: false, message: error.message });
     }
   },
-  list = (req, res) => {
-    // try {
-    //   let { start, limit } = req.query;
-    //   SubscriptionDetail.findAll({
-    //     attributes: [
-    //       'id',
-    //       'customerId',
-    //       'totalAmount',
-    //       'status',
-    //       'expiredDate',
-    //     ],
-    //     include: [
-    //       {
-    //         model: db.subscriptionDetail,
-    //         attributes: ['subscriptionId', 'amount', 'subscriptionDate'],
-    //         required: true,
-    //       },
-    //       {
-    //         model: db.customer,
-    //         attributes: ['fullName', 'email'],
-    //         required: true,
-    //       },
-    //     ],
-    //     offset: +start,
-    //     limit: +limit,
-    //     order: [['expiredDate', 'DESC']],
-    //   })
-    //     .then(async (data) => {
-    //       const count = await Subscription.count();
-    //       res.send({ records: data, totalCount: count, success: true });
-    //     })
-    //     .catch((err) => {
-    //       res.status(500).send({
-    //         success: false,
-    //         message:
-    //           err.message ||
-    //           'Some error occurred while retrieving subscription.',
-    //       });
-    //     });
-    // } catch (error) {
-    //   log(err);
-    // }
+  getSubscriptionById = async (subscriptionId) => {
+    return await Subscription.findOne({
+      attributes: ['totalAmount', 'totalDay', 'status', 'expiredDate'],
+      where: {
+        id: subscriptionId,
+      },
+    });
   },
-  update = (req, res) => {
-    // const id = req.body.id;
-    // SubscriptionDetail.update(req.body, {
-    //   where: { id: id },
-    // })
-    //   .then((num) => {
-    //     log('num:%s', num);
-    //     if (num[0] === 1) {
-    //       res.send({
-    //         success: true,
-    //         message: 'subscription detail was updated successfully.',
-    //       });
-    //     } else {
-    //       res.send({
-    //         success: false,
-    //         message: `Thông tin không có gì thay đổi`,
-    //       });
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     res.status(500).send({
-    //       message:
-    //         'Error updating subscription detail with id=' +
-    //         id +
-    //         ' ' +
-    //         err.message,
-    //     });
-    //   });
-  },
+  list = (req, res) => {},
+  update = (req, res) => {},
   deleteSubscriptionDetail = (req, res) => {
     try {
       var ids = [];
+      var { subscriptionId, amount, isUpdateSubscription, subscriptionDate } =
+        req.body;
       if (req.params.ids) ids = req.params.ids.split(',').map((e) => +e);
-      //else if (req.body.ids) ids = req.body.ids.split(',').map((e) => +e);
+      log(ids);
+      log(subscriptionId);
       SubscriptionDetail.destroy({
         where: { id: ids },
       })
-        .then((num) => {
+        .then(async (num) => {
           log(num);
           if (Number.isInteger(num)) {
-            res.send({
-              success: true,
-              message: `Subscription detail was deleted successfully ${ids.length} records.`,
-            });
+            if (isUpdateSubscription) {
+              let subcription = await getSubscriptionById(subscriptionId);
+              log(subcription);
+              let totalAmount = subcription.totalAmount - +amount;
+              let totalDay = subcription.totalDay - getDayQuantity(+amount);
+              subscriptionDate = new Date(subscriptionDate);
+              let expiredDate = getExpiredDate(subscriptionDate, totalDay);
+              log(subscriptionDate);
+              log(totalAmount);
+              log(totalDay);
+              let updatedSubscription = {
+                totalAmount,
+                totalDay,
+                expiredDate: expiredDate,
+                status: !isExpiredDate(expiredDate),
+              };
+              log(updatedSubscription);
+              Subscription.update(updatedSubscription, {
+                where: { id: +subscriptionId },
+              })
+                .then((num) => {
+                  log('num:%s', num);
+                  if (num[0] === 1) {
+                    res.send({
+                      success: true,
+                      message: `Delete subscription detail id=${ids} successfully and update subscription id=${subscriptionId} successfully`,
+                    });
+                  } else {
+                    res.send({
+                      success: false,
+                      message: `No change has been made`,
+                    });
+                  }
+                })
+                .catch((err) => {
+                  res.status(500).send({
+                    message: `Error delete subscription detail id=${ids}: ${err.message}`,
+                  });
+                });
+            } else {
+              res.send({
+                success: true,
+                message: `Subscription detail was deleted successfully ${ids.length} records.`,
+              });
+            }
           } else {
             res.send({
               success: false,

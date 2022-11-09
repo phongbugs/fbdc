@@ -83,7 +83,9 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
   ],
   listeners: {
     hide: () => {
-      getCmp('#subscriptionGrid').enable();
+      let subscriptionGrid = getCmp('#subscriptionGrid');
+      subscriptionGrid.enable();
+      subscriptionGrid.getStore().reload();
     },
     show: () => {},
   },
@@ -114,12 +116,12 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       editable: false,
     },
     {
-      fieldLabel: 'Amount',
+      fieldLabel: 'Total Amount',
       name: 'totalAmount',
       editable: false,
     },
     {
-      fieldLabel: "Day's Quantity",
+      fieldLabel: 'Total Day',
       name: 'totalDay',
       editable: false,
     },
@@ -197,6 +199,7 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
           text: 'Subscribe Date',
           width: 120,
           dataIndex: 'subscriptionDate',
+          itemId: 'subscriptionDate',
           renderer: (v) => new Date(v).toLocaleDateString('vi-VN'),
         },
         {
@@ -235,18 +238,39 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
                   'Bạn muốn xóa đăng kí này ?',
                   (buttonId) => {
                     if (buttonId === 'yes') {
-                      let store = grid.getStore();
-                      var recordIndex = store.indexOf(record);
-                      var id = grid.getStore().getAt(recordIndex).get('id');
+                      let store = grid.getStore(),
+                        id = record.get('id'),
+                        subscriptionId = record.get('subscriptionId'),
+                        amount = record.get('amount'),
+                        subscriptionDate = subscriptionForm
+                          .getRecord()
+                          .get('subscriptionDate'),
+                        isUpdateSubscription = true;
                       Ext.Ajax.request({
                         method: 'DELETE',
                         url: hostAPI + '/subscription-detail/delete/' + id,
+                        params: {
+                          subscriptionId,
+                          amount,
+                          subscriptionDate,
+                          isUpdateSubscription,
+                        },
                         success: function (response) {
-                          store.removeAt(recordIndex);
-                          getCmp('#subscriptionGrid').getStore().load();
+                          //log(response);
+                          store.removeAt(rowIndex);
+                          let subscriptionGrid = getCmp('#subscriptionGrid');
+                          subscriptionGrid.getStore().load(() => {
+                            let updatedRecord = subscriptionGrid
+                              .getSelectionModel()
+                              .getSelected()
+                              .getAt(0);
+                            formatFormRecord(updatedRecord);
+                            subscriptionForm.loadRecord(updatedRecord);
+                          });
                         },
                         failure: function (response) {
-                          alert(JSON.stringify(response));
+                          log(`${request.status}: ${request.statusText}`);
+                          log(response);
                         },
                       });
                     }

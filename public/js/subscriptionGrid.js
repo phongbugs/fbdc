@@ -39,7 +39,7 @@ let Groups,
     delete: {
       name: 'delete',
       label: 'Delete',
-      icon: 'https://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/16/Actions-edit-delete-icon.png',
+      icon: 'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-10/16/Trash-icon.png',
     },
     find: { name: 'find', label: 'Find', icon: '' },
     logout: { name: 'logout', label: 'Logout', icon: '' },
@@ -66,9 +66,7 @@ let Groups,
       formatCash(formRecord.get('totalAmount').toString())
     );
     formRecord.set('expiredDate', new Date(formRecord.get('expiredDate')));
-    log(formRecord);
     let isExpired = isExpiredDate(formRecord.get('expiredDate'));
-    log(`isExpired : ${isExpired}`);
     getCmp('#statusBox').setHtml(
       `<div id="divStatus" style="padding-left:104px"><span style="display:flex" class="${
         isExpired ? 'expiredbox' : 'activebox'
@@ -120,7 +118,7 @@ Ext.onReady(function () {
                 //     record.totalDay * 24 * 3600 * 1000
                 // );
                 //console.log(record)
-                log(record);
+                //log(record);
                 return record;
               });
             }
@@ -259,6 +257,7 @@ Ext.onReady(function () {
       },
       {
         xtype: 'button',
+        hidden: true,
         itemId: 'btnClear',
         tooltip: 'Xóa tạm dữ liệu',
         icon: 'https://icons.iconarchive.com/icons/custom-icon-design/flatastic-10/16/Trash-icon.png',
@@ -287,7 +286,7 @@ Ext.onReady(function () {
         itemId: 'btnSubscribe',
         disabled: true,
         iconCls: 'subscribe',
-        text: actions.create.label,
+        text: 'Subscribe',
         listeners: {
           click: () => {
             subscriptionGrid.setDisabled(true);
@@ -315,6 +314,7 @@ Ext.onReady(function () {
             ['totalAmount', 'Total Amount'],
           ],
         }),
+        hidden: true,
         queryMode: 'local',
         displayField: 'name',
         valueField: 'id',
@@ -335,6 +335,37 @@ Ext.onReady(function () {
         },
       },
       {
+        xtype: 'combo',
+        width: 80,
+        store: new Ext.data.ArrayStore({
+          fields: ['value', 'name'],
+          data: [
+            ['all', 'All'],
+            ['Active', 'Active'],
+            ['Expired', 'Expired'],
+          ],
+        }),
+        name: 'cbbStatus',
+        value: 'all',
+        displayField: 'name',
+        valueField: 'value',
+        editable: false,
+        listeners: {
+          change: (_, val) => {
+            log(val);
+            var proxy = storeSubscription.getProxy();
+            if (val === 'all') proxy.setConfig('url', ['/subscription/list']);
+            else {
+              proxy.setConfig('url', [
+                '/subscription/find/' + val.toLowerCase(),
+              ]);
+              //proxy.setConfig('extraParams', { status: val });
+            }
+            storeSubscription.load();
+          },
+        },
+      },
+      {
         xtype: 'textfield',
         width: 250,
         itemId: 'txtSubscriptionFindField',
@@ -347,6 +378,7 @@ Ext.onReady(function () {
               : null,
         },
       },
+
       {
         xtype: 'button',
         text: actions.find.label,
