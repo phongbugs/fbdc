@@ -26,7 +26,7 @@ const CryptoJS = require('crypto-js'),
           let authToken = CryptoJS.AES.encrypt(
             CryptoJS.enc.Utf8.parse(
               JSON.stringify({
-                expiredDate: new Date().getTime() + tokenTimeOut * 3600 * 1000,
+                expiredDate: Date.now() + tokenTimeOut * 3600 * 1000,
               })
             ),
             key,
@@ -118,7 +118,7 @@ const CryptoJS = require('crypto-js'),
         padding: CryptoJS.pad.Pkcs7,
       }).toString(CryptoJS.enc.Utf8);
       if (decyptedData) {
-        let d1 = new Date().getTime(),
+        let d1 = Date.now(),
           d2 = new Date(JSON.parse(decyptedData).expiredDate).getTime();
         //log(d1 - d2);
         status = d1 - d2 <= 0;

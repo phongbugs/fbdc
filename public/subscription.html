@@ -17,10 +17,24 @@
         integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
-        .expired{color: white; background-color:#e74c4c!important;}
-        .active{color: white; background-color:#59834e!important;}
-        .expiredSubscriptionDetail{color: #e74c4c!important;}
-        .x-grid-cell-row-numberer{background-color: transparent;}
+        .expired {
+            color: white;
+            background-color: #e74c4c !important;
+        }
+
+        .active {
+            color: white;
+            background-color: #59834e !important;
+        }
+
+        .expiredSubscriptionDetail {
+            color: #e74c4c !important;
+        }
+
+        .x-grid-cell-row-numberer {
+            background-color: transparent;
+        }
+
         #divStatus span:before {
             content: "";
             display: inline-block;
@@ -28,12 +42,15 @@
             height: 15px;
             margin-right: 5px;
         }
+
         span.activebox:before {
             background: green;
         }
+
         span.expiredbox:before {
             background: red;
         }
+
     </style>
 </head>
 
@@ -44,7 +61,7 @@
         </div>
     </div>
     <script>
-        let currentVersion = () => new Date().getTime();
+        let currentVersion = () => Date.now();
         window.onload = () => {
             authenticate((isAuthenticated) => {
                 if (isAuthenticated)

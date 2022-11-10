@@ -28,7 +28,7 @@
 		</div>
 	</div>
 	<script>
-		let currentVersion = () => new Date().getTime();
+		let currentVersion = () => Date.now();
 		window.onload = () => {
 			authenticate((isAuthenticated) => {
 				if (isAuthenticated)

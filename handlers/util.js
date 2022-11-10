@@ -20,13 +20,9 @@ let getDayQuantity = (amount) => {
     return day;
   },
   formatDate = (date) => date.split('/').reverse().join('-'),
-  isExpiredDate = (expiredDate) => {
-    let currentDate = new Date();
-    return expiredDate.getTime() - currentDate.getTime() < 0;
-  },
-  getExpiredDate = (subscriptionDate, totalDay) => {
-    return new Date(subscriptionDate.getTime() + totalDay * 24 * 3600 * 1000);
-  };
+  isExpiredDate = (expiredDate) => expiredDate.getTime() - Date.now() < 0,
+  getExpiredDate = (subscriptionDate, totalDay) =>
+    new Date(subscriptionDate.getTime() + totalDay * 24 * 3600 * 1000);
 
 module.exports = {
   getDayQuantity,

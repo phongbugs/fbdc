@@ -59,8 +59,8 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
   },
   style: {
     position: 'absolute',
-    top: '100px',
-    left: '100px',
+    top: '75px',
+    left: '150px',
     right: '50%',
     zIndex: 999,
   },
@@ -76,19 +76,20 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       type: 'close',
       handler: () => {
         subscriptionForm.hide();
-        getCmp('#subscriptionGrid').enable();
-        getCmp('#subscriptionGrid').getStore().reload();
+        let subscriptionGrid = getCmp('#subscriptionGrid');
+        subscriptionGrid.enable();
+        subscriptionGrid.getSelectionModel().getSelected().getAt(0).reject();
       },
     },
   ],
-  listeners: {
-    hide: () => {
-      let subscriptionGrid = getCmp('#subscriptionGrid');
-      subscriptionGrid.enable();
-      subscriptionGrid.getStore().reload();
-    },
-    show: () => {},
-  },
+  // listeners: {
+  //   hide: () => {
+  //     let subscriptionGrid = getCmp('#subscriptionGrid');
+  //     subscriptionGrid.enable();
+  //     subscriptionGrid.getStore().reload();
+  //   },
+  //   show: () => {},
+  // },
   defaultType: 'textfield',
   defaultStyle: {
     height: '50px',
@@ -141,12 +142,6 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       editable: false,
       readOnly: true,
     },
-    // {
-    //   fieldLabel: 'Status',
-    //   name: 'status',
-    //   itemId: 'txtStatus',
-    //   editable: false,
-    // },
     {
       xtype: 'component',
       id: 'statusBox',
@@ -170,11 +165,6 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
       ],
       viewConfig: {
         loadMask: true,
-      },
-      listeners: {
-        // beforeedit: function (editor, context) {},
-        show: (grid) => {},
-        hide: () => null,
       },
       columns: [
         {
@@ -259,7 +249,8 @@ var subscriptionForm = Ext.create('Ext.form.Panel', {
                           //log(response);
                           store.removeAt(rowIndex);
                           let subscriptionGrid = getCmp('#subscriptionGrid');
-                          subscriptionGrid.getStore().load(() => {
+                          let subscriptionStore = subscriptionGrid.getStore();
+                          subscriptionStore.load(() => {
                             let updatedRecord = subscriptionGrid
                               .getSelectionModel()
                               .getSelected()

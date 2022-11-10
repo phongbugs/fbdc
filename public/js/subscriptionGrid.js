@@ -56,10 +56,7 @@ let Groups,
         return (index % 3 ? next : next + '.') + prev;
       });
   },
-  isExpiredDate = (expiredDate) => {
-    let currentDate = new Date();
-    return expiredDate.getTime() - currentDate.getTime() < 0;
-  },
+  isExpiredDate = (expiredDate) => expiredDate.getTime() - Date.now() < 0,
   formatFormRecord = (formRecord) => {
     formRecord.set(
       'totalAmount',
@@ -68,7 +65,7 @@ let Groups,
     formRecord.set('expiredDate', new Date(formRecord.get('expiredDate')));
     let isExpired = isExpiredDate(formRecord.get('expiredDate'));
     getCmp('#statusBox').setHtml(
-      `<div id="divStatus" style="padding-left:104px"><span style="display:flex" class="${
+      `<div id="divStatus" style="padding-left:104px; margin:10px 0"><span style="display:flex" class="${
         isExpired ? 'expiredbox' : 'activebox'
       }"> ${isExpired ? 'Expired' : 'Active'}</span></div>`
     );
@@ -274,6 +271,7 @@ Ext.onReady(function () {
         listeners: {
           click: () => {
             storeSubscription.clearFilter();
+            getCmp('#cbbStatus').setValue('all');
             storeSubscription
               .getProxy()
               .setConfig('url', ['/subscription/list/']);
@@ -346,6 +344,7 @@ Ext.onReady(function () {
           ],
         }),
         name: 'cbbStatus',
+        itemId: 'cbbStatus',
         value: 'all',
         displayField: 'name',
         valueField: 'value',
